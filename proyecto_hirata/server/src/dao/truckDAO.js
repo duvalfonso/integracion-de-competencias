@@ -1,0 +1,56 @@
+import pool from "../utils/dbConnection.js";
+import TruckModel from './models/truck.model.js'
+
+export default class Truck {
+  constructor() {
+    this.table = TruckModel.table
+  }
+
+  get = async () => {
+    const query = `SELECT * FROM ${this.table}`
+    const [result] = await pool.execute(query)
+    return result 
+  }
+
+  getBy = async (params) => {
+      const key = Object.keys(params)[0]
+      const value = Object.values(params)[0]
+
+      if(value === undefined) {
+        throw new Error(`El valor para la busqueda por ${key} es undefined`)
+      }
+  
+      const query = `SELECT * FROM ${this.table} WHERE ${key} = ? LIMIT 1`
+      const [result] = await pool.execute(query, [value])
+      return result[0]
+    }
+
+  save = async (doc)=> {
+    const {
+      plate_number,
+      model,
+      year,
+      total_mileage,
+      last_maintenance_mileage
+    } = doc
+    const query = `
+    INSERT INTO ${this.table}
+    (
+      plate_number,
+      model,
+      year,
+      total_mileage,
+      last_maintenance_mileage
+    )
+    VALUES
+    (?, ?, ?, ?, ?)`
+    const [result] = await pool.execute(query, [plate_number, model, year, total_mileage, last_maintenance_mileage])
+    return result
+  }
+
+  update = async (id, newMileage) => {
+    const query = `UPDATE ${this.table} SET total_mileage = ? WHERE id = ?`
+    const [result] = await pool.execute(query, [newMileage, id])
+    return result
+  }
+}
