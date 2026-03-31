@@ -71,6 +71,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         // Intenta autenticación contra backend.
         const response = await fetch(API_LOGIN_URL, {
             method: "POST",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },

@@ -1,6 +1,6 @@
 // Endpoints backend para registrar kilometraje y obtener patentes disponibles.
 const API_MILEAGE_URL = "http://localhost:8000/api/mileageLogs";
-const API_TRUCKS_URL = "http://localhost:8000/api/mileageLogs/trucks";
+const API_TRUCKS_URL = "http://localhost:8000/api/trucks";
 
 // Normaliza patente a formato consistente (sin espacios y en mayúsculas).
 const normalizePlate = (plate) => plate.trim().toUpperCase();
@@ -48,6 +48,7 @@ const tryOnlineSave = async (mileageData) => {
         // Llamada principal de guardado.
         const response = await fetch(API_MILEAGE_URL, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
@@ -71,7 +72,13 @@ const tryOnlineSave = async (mileageData) => {
 // También muestra mensajes de estado en el contenedor de alertas.
 const loadTruckOptions = async (truckSelect, alert) => {
     try {
-        const response = await fetch(API_TRUCKS_URL);
+        const response = await fetch(API_TRUCKS_URL, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         if (!response.ok) {
             throw new Error(`Error ${response.status}`);
         }

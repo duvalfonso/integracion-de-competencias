@@ -1,6 +1,6 @@
 // Endpoints backend usados por el módulo de administración de flota.
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
-const API_DRIVERS_URL = 'http://localhost:8000/api/trucks/drivers'
+const API_DRIVERS_URL = 'http://localhost:8000/api/users'
 const API_REGISTER_URL = 'http://localhost:8000/api/sessions/register'
 
 // Cache local de conductores activos para reutilizar en selects.
@@ -30,7 +30,13 @@ const loadDrivers = async () => {
   // Reinicia opciones para evitar duplicados al recargar.
   driverSelect.innerHTML = '<option value="">Selecciona conductor</option>'
 
-  const response = await fetch(API_DRIVERS_URL)
+  const response = await fetch(API_DRIVERS_URL, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      'Content-type': 'application/json'
+    }
+  })
   if (!response.ok) {
     throw new Error('No se pudieron cargar los conductores')
   }
@@ -66,7 +72,13 @@ const loadTrucks = async () => {
   const tbody = document.getElementById('trucksTableBody')
   if (!tbody) return
 
-  const response = await fetch(API_TRUCKS_URL)
+  const response = await fetch(API_TRUCKS_URL, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      'Content-type': 'application/json'
+    }
+  })
   if (!response.ok) {
     throw new Error('No se pudieron cargar los camiones')
   }
@@ -102,6 +114,7 @@ const loadTrucks = async () => {
 const updateAssignedDriver = async (truckId, driverId) => {
   const response = await fetch(`${API_TRUCKS_URL}/${truckId}/driver`, {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ assigned_driver_id: Number(driverId) })
   })
@@ -131,6 +144,7 @@ const registerTruck = async (event) => {
   // Persistencia del camión en backend.
   const response = await fetch(API_TRUCKS_URL, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       plate_number: plate,
@@ -169,6 +183,7 @@ const registerDriver = async (event) => {
   // Reutiliza endpoint de registro existente.
   const response = await fetch(API_REGISTER_URL, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ full_name: fullName, email, password })
   })
