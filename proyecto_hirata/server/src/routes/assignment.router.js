@@ -5,6 +5,6 @@ import { authorize } from '../middlewares/auth.js'
 const router = Router()
 
 router.get('/', authorize(['admin', 'superadmin']), assignmentController.getAllAssignments)
-router.post('/', authorize(['admin', 'superadmin']), assignmentController.assignTruck)
+router.post('/assign', authorize(['admin', 'superadmin']), assignmentController.assignTruck)
 
 export default router

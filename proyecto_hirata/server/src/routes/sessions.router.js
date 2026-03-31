@@ -6,7 +6,7 @@ const router = Router()
 
 router.post('/register', sessionController.register)
 router.post('/login', sessionController.login)
-router.get('/current', authorize(['driver', 'admin', 'superadmin']), sessionController.current)
-router.post('/logout', authorize(['driver', 'admin', 'superadmin']), sessionController.logout)
+router.get('/current', authorize(['driver', 'maintenance', 'admin', 'superadmin']), sessionController.current)
+router.post('/logout', authorize(['driver', 'maintenance', 'admin', 'superadmin']), sessionController.logout)
 
 export default router

@@ -27,7 +27,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body // se toman los datos desde el formulario
     if(!email || !password) {
-      res.status(400).send({ status: "error", error: "Campos incompletos." }) // si no se ingresa alguno de los campos se solicita completarlos.
+      return res.status(400).send({ status: "error", error: "Campos incompletos." }) // si no se ingresa alguno de los campos se solicita completarlos.
     }
   
     const user = await usersService.getUserByEmail(email) // se realiza busqueda de usuario con el email indicado
@@ -42,9 +42,7 @@ const login = async (req, res) => {
     const token = jwt.sign(userDTO, process.env.JWT_SECRET, { expiresIn: '1h' }) // se crea un token usando el usuario indicado, una palabra secreta y el tiempo de validez del token.
 
     // se genera una cookie de sesión encriptada y única y se guarda en el lado del cliente y se configura que esta cookie solo sea accesible a través de una solicitud http.
-    console.log(req.session.user);
-    
-    res.cookie('access_token', token, { httpOnly: true, sameSite: 'none' }).send({ status: "success", message: "Logged in", payload: userDTO })
+    res.cookie('access_token', token, { httpOnly: true, sameSite: 'none', secure: 'false' }).send({ status: "success", message: "Logged in", payload: userDTO })
   } catch (error) {
     res.status(500).send({ message: 'Error interno del servidor', error: error.message })
   }
@@ -57,17 +55,21 @@ const login = async (req, res) => {
 const current = async (req, res) => {
   try {
     const cookie = req.cookies['access_token']
-    if(!cookie) return res.redirect('/')
+    if(!cookie) {
+      return res.status(401).send({ status: "error", error: "No autenticado" })
+    }
     const user = jwt.verify(cookie, process.env.JWT_SECRET)
     if(user)
       return res.send({ status: "success", payload: user })
   } catch (error) {
-    res.status(500).send({ status: "error", error: error.message })
+    res.status(401).send({ status: "error", error: "Token inválido" })
   }
 }
 
 const logout = async (req, res) => {
-  res.clearCookie('access_token').json({ message: "Logout successful" })
+  res.clearCookie('access_token', {
+    httpOnly: "true"
+  }).send({ status: "success", message: "Logged out successfully" })
 }
 
 export default {

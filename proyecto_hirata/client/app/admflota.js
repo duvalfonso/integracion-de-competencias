@@ -2,6 +2,7 @@
 const API_TRUCKS_URL = 'http://localhost:8000/api/trucks'
 const API_DRIVERS_URL = 'http://localhost:8000/api/users'
 const API_REGISTER_URL = 'http://localhost:8000/api/sessions/register'
+const API_ASSIGNMENTS_URL = 'http://localhost:8000/api/assignments'
 
 // Cache local de conductores activos para reutilizar en selects.
 let activeDrivers = []
@@ -56,74 +57,119 @@ const loadDrivers = async () => {
 }
 
 // Construye el select HTML por fila para reasignar conductor en tabla.
-const buildDriverSelectHtml = (truckId, selectedDriverId) => {
-  const options = ['<option value="">Selecciona conductor</option>']
+const buildDriverSelect = (truckId, selectedDriverId) => {
+  const container = document.createElement('div');
+  container.className = 'd-flex gap-2';
+
+  // SELECT
+  const select = document.createElement('select');
+  select.className = 'form-select form-select-sm js-driver-select';
+  select.dataset.truckId = truckId;
+
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Selecciona conductor';
+  select.appendChild(defaultOption);
 
   for (const driver of activeDrivers) {
-    const isSelected = Number(selectedDriverId) === Number(driver.id) ? 'selected' : ''
-    options.push(`<option value="${driver.id}" ${isSelected}>${driver.full_name}</option>`)
+    const option = document.createElement('option');
+    option.value = driver.id;
+    option.textContent = driver.full_name;
+
+    if (Number(selectedDriverId) === Number(driver.id)) {
+      option.selected = true;
+    }
+
+    select.appendChild(option);
   }
 
-  return `<select class="form-select form-select-sm js-driver-select" data-truck-id="${truckId}">${options.join('')}</select>`
-}
+  // BOTÓN
+  const button = document.createElement('button');
+  button.className = 'btn btn-primary btn-sm js-assign-btn';
+  button.dataset.truckId = truckId;
+  button.textContent = 'Asignar';
+
+  container.appendChild(select);
+  container.appendChild(button);
+
+  return container;
+};
 
 // Carga listado de camiones y lo renderiza en la tabla principal.
 const loadTrucks = async () => {
-  const tbody = document.getElementById('trucksTableBody')
-  if (!tbody) return
+  const tbody = document.getElementById('trucksTableBody');
+  if (!tbody) return;
 
-  const response = await fetch(API_TRUCKS_URL, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      'Content-type': 'application/json'
-    }
-  })
-  if (!response.ok) {
-    throw new Error('No se pudieron cargar los camiones')
+  // 🔥 traer trucks + assignments
+  const [trucksRes, assignmentsRes] = await Promise.all([
+    fetch(API_TRUCKS_URL, { credentials: "include" }),
+    fetch(API_ASSIGNMENTS_URL, { credentials: "include" })
+  ]);
+
+  if (!trucksRes.ok) throw new Error('No se pudieron cargar los camiones');
+  if (!assignmentsRes.ok) throw new Error('No se pudieron cargar las asignaciones');
+
+  const trucksData = await trucksRes.json();
+  const assignmentsData = await assignmentsRes.json();
+
+  const trucks = Array.isArray(trucksData.payload) ? trucksData.payload : [];
+  const assignments = Array.isArray(assignmentsData.payload) ? assignmentsData.payload : [];
+
+  // 🔥 mapa truck_id → driver_id
+  const assignmentMap = {};
+  for (const a of assignments) {
+    assignmentMap[a.truck_id] = a.driver_id;
   }
 
-  const data = await response.json()
-  const trucks = Array.isArray(data.payload) ? data.payload : []
+  tbody.innerHTML = '';
 
-  tbody.innerHTML = ''
-
-  // Caso vacío: muestra fila informativa en vez de tabla vacía.
   if (trucks.length === 0) {
-    const row = document.createElement('tr')
-    row.innerHTML = '<td colspan="5" class="text-muted">Sin registros</td>'
-    tbody.appendChild(row)
-    return
+    const row = document.createElement('tr');
+    row.innerHTML = '<td colspan="5" class="text-muted">Sin registros</td>';
+    tbody.appendChild(row);
+    return;
   }
 
-  // Render de filas con conductor editable.
   for (const truck of trucks) {
-    const row = document.createElement('tr')
+    const assignedDriverId = assignmentMap[truck.id] || null;
+
+    const row = document.createElement('tr');
+
     row.innerHTML = `
       <td>${truck.plate_number || '-'}</td>
       <td>${truck.brand || '-'}</td>
       <td>${truck.model || '-'}</td>
       <td>${truck.year || '-'}</td>
-      <td>${buildDriverSelectHtml(truck.id, truck.assigned_driver_id)}</td>
-    `
-    tbody.appendChild(row)
+    `;
+
+    const driverCell = document.createElement('td');
+    driverCell.appendChild(buildDriverSelect(truck.id, assignedDriverId));
+
+    row.appendChild(driverCell);
+    tbody.appendChild(row);
   }
-}
+};
 
 // Actualiza conductor asignado de un camión puntual.
-const updateAssignedDriver = async (truckId, driverId) => {
-  const response = await fetch(`${API_TRUCKS_URL}/${truckId}/driver`, {
-    method: 'PUT',
+const assignTruckToDriver = async (truckId, driverId) => {
+  const response = await fetch(`${API_ASSIGNMENTS_URL}/assign`, {
+    method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ assigned_driver_id: Number(driverId) })
-  })
+    body: JSON.stringify({
+      driver_id: Number(driverId),
+      truck_id: Number(truckId)
+    })
+  });
 
-  const data = await response.json().catch(() => ({}))
+  const data = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    throw new Error(data.message || 'No se pudo actualizar el conductor asignado')
+    throw new Error(data.error || 'No se pudo asignar el vehículo');
   }
-}
+
+  return data;
+};
 
 // Envía alta de camión nuevo usando datos del formulario.
 const registerTruck = async (event) => {
@@ -292,29 +338,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Bind de edición rápida de conductor en tabla.
-  const trucksTableBody = document.getElementById('trucksTableBody')
-  if (trucksTableBody) {
-    trucksTableBody.addEventListener('change', async (event) => {
-      const select = event.target.closest('.js-driver-select')
-      if (!select) return
+  const trucksTableBody = document.getElementById('trucksTableBody');
 
-      const truckId = select.dataset.truckId
-      const driverId = select.value
+if (trucksTableBody) {
+  trucksTableBody.addEventListener('click', async (event) => {
+    const btn = event.target.closest('.js-assign-btn');
+    if (!btn) return;
 
-      if (!truckId || !driverId) {
-        showAlert('Selecciona un conductor válido para asignar', 'danger')
-        return
-      }
+    const truckId = btn.dataset.truckId;
 
-      try {
-        await updateAssignedDriver(truckId, driverId)
-        showAlert('Conductor actualizado correctamente', 'success')
-      } catch (error) {
-        showAlert(error.message || 'Error al actualizar conductor', 'danger')
-        await loadTrucks()
-      }
-    })
-  }
+    const select = trucksTableBody.querySelector(
+      `.js-driver-select[data-truck-id="${truckId}"]`
+    );
+
+    const driverId = select.value;
+
+    if (!driverId) {
+      showAlert('Selecciona un conductor válido', 'danger');
+      return;
+    }
+
+    try {
+      await assignTruckToDriver(truckId, driverId);
+      showAlert('Vehículo asignado correctamente', 'success');
+      await loadTrucks();
+    } catch (error) {
+      showAlert(error.message, 'danger');
+    }
+  });
+}
 
   // Bind de formulario de alta de conductor.
   const newDriverForm = document.getElementById('newDriverForm')

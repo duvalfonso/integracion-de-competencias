@@ -16,7 +16,8 @@ const allowedOrigins = [
   'http://localhost:8000',
   'http://127.0.0.1:5501',
   'http://127.0.0.1:5500',
-  'http://localhost:5501'
+  'http://localhost:5501',
+  'http://localhost:5500'
 ]
 
 app.use(cors({
@@ -52,7 +53,7 @@ app.use((req, res, next) => {
 
 app.use('/api/users', userRouter)
 app.use('/api/sessions', sessionRouter)
-app.use('/api/assignment', assignmentRouter)
+app.use('/api/assignments', assignmentRouter)
 
 app.use('/api/mileageLogs', mileageRouter)
 app.use('/api/trucks', truckRouter)
