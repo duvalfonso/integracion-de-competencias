@@ -45,6 +45,7 @@ app.use((req, res, next) => {
     const data = jwt.verify(token, process.env.JWT_SECRET)
     req.session.user = data
   } catch (error) {
+    if(error.message !== 'jwt expired')
     console.log(error.message);
   }
 

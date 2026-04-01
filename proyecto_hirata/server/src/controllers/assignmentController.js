@@ -26,6 +26,7 @@ const assignTruck = async (req, res) => {
     if(!truck) {
       return res.status(404).send({ status: "error", error: "Vehículo no encontrado" })
     }
+
     const result = await assignmentService.assignTruck({ driver_id, truck_id })
     
     res.status(201).send({ status: "success", message: "Vehiculo asignado correctamente", result_id: result.insertId })
@@ -34,7 +35,30 @@ const assignTruck = async (req, res) => {
   }
 }
 
+//Work in Progress
+const reassignTruck = async (req, res) => {
+  try {
+    const { driver_id, truck_id } = req.body
+    if(!driver_id || !truck_id) {
+      return res.status(400).send({ status: 'error', error: 'Datos incompletos' })
+    }
+
+    const currentAssignment = await assignmentService.getActiveByTruckId(truck_id)
+    if(!currentAssignment) {
+      return res.status(400).send({ status: "success", message: 'El camión no tiene una asignación activa para usar el metodo reasginar.' })
+    }
+
+    await assignmentService.unassignTruck(truck_id)
+
+    const result = await assignmentService.assignTruck({ driver_id, truck_id })
+    res.send({ status: "success", message: "Conductor reasignado correctamente", result_id: result.insertId })
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message })
+  }
+}
+
 export default {
   assignTruck,
-  getAllAssignments
+  getAllAssignments,
+  reassignTruck
 }

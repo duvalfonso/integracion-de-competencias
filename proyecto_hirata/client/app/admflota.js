@@ -171,20 +171,54 @@ const assignTruckToDriver = async (truckId, driverId) => {
   return data;
 };
 
+// Work in Progress
+// Reemplazar un conductor asignado a un camion.
+const reassignTruck = async (truckId, driverId) => {
+  const response = await fetch(`${API_ASSIGNMENTS_URL}/reassign`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application-json" },
+    body: JSON.stringify({
+      driver_id: Number(driverId),
+      truck_id: Number(truckId)
+    })
+  })
+
+  const data = await response.json()
+
+  if(!response.ok) {
+    throw new Error(data.error || 'No se pudo reasignar')
+  }
+
+  return data
+}
+
 // Envía alta de camión nuevo usando datos del formulario.
 const registerTruck = async (event) => {
   event.preventDefault()
 
-  const plate = document.getElementById('truckPlate')?.value?.trim()?.toUpperCase()
+  const plate_number = document.getElementById('truckPlate')?.value?.trim()?.toUpperCase()
   const brand = document.getElementById('truckBrand')?.value?.trim()
   const model = document.getElementById('truckModel')?.value?.trim()
   const year = document.getElementById('truckYear')?.value
   const assignedDriverId = document.getElementById('truckDriver')?.value
 
   // Validación mínima de frontend.
-  if (!plate || !brand || !model || !year || !assignedDriverId) {
+  // Conductor asignado debe ser un campo opcional, ya que existe la posibilidad de que no hayan conductores disponibles para asignar y aún así se requiere registrar un vehículo nuevo
+  if (!plate_number || !brand || !model || !year) {
     showAlert('Completa todos los campos para registrar el camión')
     return
+  }
+
+  const truckData = {
+    plate_number,
+    brand,
+    model,
+    year: Number(year)
+  }
+
+  if(assignedDriverId) {
+    truckData.assigned_driver_id = Number(assignedDriverId)
   }
 
   // Persistencia del camión en backend.
@@ -192,18 +226,12 @@ const registerTruck = async (event) => {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      plate_number: plate,
-      brand,
-      model,
-      year: Number(year),
-      assigned_driver_id: Number(assignedDriverId)
-    })
+    body: JSON.stringify(truckData)
   })
 
   const responseData = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(responseData.message || 'No se pudo registrar el camión')
+    throw new Error(responseData.error || 'No se pudo registrar el camión')
   }
 
   // Refresca la tabla tras alta exitosa.
@@ -363,6 +391,11 @@ if (trucksTableBody) {
       showAlert('Vehículo asignado correctamente', 'success');
       await loadTrucks();
     } catch (error) {
+      if(error.message.includes('ya está asignado')) {
+        const confirmReplace = confirm('Este camión ya tiene un conductor asignado. \n¿Deseas reemplazarlo?')
+        if(!confirmReplace) return
+        await reassignTruck(truckId, driverId)
+      }
       showAlert(error.message, 'danger');
     }
   });

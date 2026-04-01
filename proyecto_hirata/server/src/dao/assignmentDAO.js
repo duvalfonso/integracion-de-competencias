@@ -42,4 +42,6 @@ export default class Assignment {
     const [result] = await pool.execute(query, [driver_id])
     return result[0]
   }
+
+  // TODO: agregar metodo para cambiar estado de asignamiento en tabla trucks
 }
