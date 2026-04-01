@@ -35,7 +35,7 @@ export default class Assignment {
     const query = `
       SELECT t.*
       FROM trucks t
-      JOIN driver_truck dt ON dt.truck_id = t.id
+      JOIN truck_driver dt ON dt.truck_id = t.id
       WHERE dt.driver_id = ?
       LIMIT 1
     `

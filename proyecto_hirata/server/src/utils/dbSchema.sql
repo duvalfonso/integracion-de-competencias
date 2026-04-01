@@ -46,7 +46,7 @@ CREATE TABLE mileage_logs (
   mileage_value INT NOT NULL,
   registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (truck_id) REFERENCES trucks(id),
-  FOREIGN KEY (driver_id) REFERENCES drivers(id)
+  FOREIGN KEY (driver_id) REFERENCES users(id)
 );
 
 CREATE TABLE maintenance_history (
