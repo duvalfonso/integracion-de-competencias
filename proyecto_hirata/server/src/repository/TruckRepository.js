@@ -9,8 +9,8 @@ export default class TruckRepository extends GenericRepository {
     return this.getBy({ id })
   }
 
-  getByPlateNumber = async (plate) => {
-    return this.getBy({ plate })
+  getByPlateNumber = async (plate_number) => {
+    return this.getBy({ plate_number })
   }
 
   getByStatus = async (status) => {

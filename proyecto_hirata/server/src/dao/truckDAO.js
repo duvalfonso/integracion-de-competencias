@@ -28,23 +28,21 @@ export default class Truck {
   save = async (doc)=> {
     const {
       plate_number,
+      brand,
       model,
-      year,
-      total_mileage,
-      last_maintenance_mileage
+      year
     } = doc
     const query = `
     INSERT INTO ${this.table}
     (
       plate_number,
+      brand,
       model,
-      year,
-      total_mileage,
-      last_maintenance_mileage
+      year
     )
     VALUES
-    (?, ?, ?, ?, ?)`
-    const [result] = await pool.execute(query, [plate_number, model, year, total_mileage, last_maintenance_mileage])
+    (?, ?, ?, ?)`
+    const [result] = await pool.execute(query, [plate_number, brand,  model, year ])
     return result
   }
 
