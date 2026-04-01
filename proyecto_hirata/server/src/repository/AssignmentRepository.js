@@ -13,5 +13,7 @@ export default class AssignmentRepository extends GenericRepository {
     return this.dao.getTruckByDriver(driver_id)
   }
 
-  // TODO agregar metodo para reasignar un conductor a un camión y modificar su estado.
+  reassignTruck = async (doc) => {
+    return this.dao.reassign(doc)
+  }
 }
