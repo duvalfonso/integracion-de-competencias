@@ -12,26 +12,90 @@ export default class Mileage {
     return result
   }
 
-  save = async (doc) => {
+  save = async ({ driver_id, mileage_value, registration_date }) => {
     const connection = await pool.getConnection()
+
     try {
-      const { truck_id, driver_id, mileage_value } = doc
       await connection.beginTransaction()
 
-      const insertQuery = `INSERT INTO ${this.table} (truck_id, driver_id, mileage_value, registration_date) VALUES (?, ?, ?, NOW())`
-      await connection.execute(insertQuery, [truck_id, driver_id, mileage_value])
+      const [assignment] = await connection.query(
+        `SELECT * FROM truck_driver
+        WHERE driver_id = ? AND active = true
+        FOR UPDATE`,
+        [driver_id]
+      )
 
-      const updateQuery = `UPDATE trucks SET total_mileage = ? WHERE id = ?`
-
-      const [updateResult] = await connection.execute(updateQuery, [mileage_value, truck_id])
-      if(updateResult.affectedRows === 0) {
-        throw new Error("No se pudo actualizar información del vehículo")
+      if(assignment.length === 0) {
+        throw new Error('El conductor no tiene un camion asignado')
       }
 
+      const truck_id = assignment[0].truck_id
+
+      const [truckRows] = await connection.query(
+        `SELECT total_mileage, last_maintenance_mileage
+        FROM trucks
+        WHERE id = ?
+        FOR UPDATE`,
+        [truck_id]
+      )
+
+      if(truckRows === 0) {
+        throw new Error('Vehiculo no encontrado')
+      }
+
+      const truck = truckRows[0]
+
+      if(mileage_value <= truck.total_mileage) {
+        throw new Error(`El kilometraje debe ser mayor a ${truck.total_mileage}`)
+      }
+
+      await connection.query(
+        `INSERT INTO ${this.table}
+        (truck_id, driver_id, mileage_value, registration_date)
+        VALUES (?, ?, ?, ?)`,
+        [truck_id, driver_id, mileage_value, registration_date ? registration_date : NOW()]
+      )
+
+      const mileageSinceLastService = mileage_value - truck.last_maintenance_mileage
+
+      const needsMaintenance = mileageSinceLastService >= truck.maintenance_threshold
+
+      await connection.query(
+        `UPDATE trucks
+        SET total_mileage = ?, status = ?
+        WHERE id = ?`,
+        [
+          mileage_value, 
+          needsMaintenance ? 'en mantenimiento' : 'disponible',
+          truck_id
+        ]
+      )
+
+      await connection.query(
+        `UPDATE truck_driver
+        SET 
+          active = false,
+          ended_at = ?
+        WHERE id = ?`,
+        [
+          registration_date || new Date(),
+          assignment[0].id
+        ]
+      )
+
       await connection.commit()
+      return { 
+        success: true,
+        maintenanceAlert: needsMaintenance,
+        details: {
+          currentMileage: mileage_value,
+          mileageForNextService: Math.max(0, truck.maintenance_threshold - mileageSinceLastService)
+        }
+      }
+      
     } catch (error) {
       await connection.rollback()
-      throw error      
+      throw error
     } finally {
       connection.release()
     }

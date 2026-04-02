@@ -1,9 +1,7 @@
 // Endpoints backend para registrar kilometraje y obtener patentes disponibles.
-const API_MILEAGE_URL = "http://localhost:8000/api/mileageLogs";
+const API_MILEAGE_URL = "http://localhost:8000/api/mileageLogs/save";
 const API_TRUCKS_URL = "http://localhost:8000/api/trucks";
-
-// Normaliza patente a formato consistente (sin espacios y en mayúsculas).
-const normalizePlate = (plate) => plate.trim().toUpperCase();
+const API_MY_TRUCK_URL = "http://localhost:8000/api/trucks/my-truck"
 
 // Obtiene el usuario autenticado desde localStorage.
 // Si el JSON está corrupto o no existe, retorna null.
@@ -18,10 +16,7 @@ const getAuthUser = () => {
 
 // Valida el formulario antes de enviar.
 // Retorna string con mensaje de error o null si está correcto.
-const validateMileageForm = (truckId, mileage, date) => {
-    if (!truckId || !truckId.trim()) {
-        return "La patente del camión es requerida";
-    }
+const validateMileageForm = (mileage, date) => {
     if (!mileage || mileage <= 0) {
         return "El kilometraje debe ser mayor a 0";
     }
@@ -36,12 +31,8 @@ const validateMileageForm = (truckId, mileage, date) => {
 const tryOnlineSave = async (mileageData) => {
     // Payload compatible con el backend actual.
     const payload = {
-        truck_id: mileageData.truck_id,
-        driver_id: mileageData.driver_id,
-        driver_email: mileageData.driver_email,
         mileage_value: mileageData.mileage_value,
         registration_date: mileageData.registration_date,
-        plate_number: mileageData.truck_plate
     };
 
     try {
@@ -70,42 +61,35 @@ const tryOnlineSave = async (mileageData) => {
 
 // Carga patentes disponibles desde BD y rellena el select.
 // También muestra mensajes de estado en el contenedor de alertas.
-const loadTruckOptions = async (truckSelect, alert) => {
+const loadAssignedTruck = async (container, alert) => {
     try {
-        const response = await fetch(API_TRUCKS_URL, {
+        const response = await fetch(API_MY_TRUCK_URL, {
           method: "GET",
           credentials: "include",
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-        }
 
         const data = await response.json();
-        const trucks = Array.isArray(data.payload) ? data.payload : [];
-
-        // Limpia opciones previas y deja opción por defecto.
-        truckSelect.innerHTML = '<option value="">Selecciona una patente</option>';
-
-        // Agrega cada camión como opción mostrando su km actual.
-        for (const truck of trucks) {
-            const option = document.createElement("option");
-            option.value = truck.plate_number;
-            option.textContent = `${truck.plate_number} (${truck.total_mileage} km)`;
-            truckSelect.appendChild(option);
+        
+        if (!response.ok) {
+            throw new Error(data.error || data.message || `Error: ${response.status}`);
         }
 
-        // Feedback cuando no hay patentes registradas.
-        if (trucks.length === 0 && alert) {
-            alert.textContent = "No hay patentes disponibles para registrar kilometraje.";
-            alert.className = "mt-3 text-warning";
+        const truck = data.payload;
+
+        if(container) {
+          container.value = `${truck.plate_number} (${truck.total_mileage} km)`
         }
     } catch (error) {
+        if (container) {
+          container.textContent = `Sin vehículo asignado`;
+        }
+
         // Feedback cuando falla la carga desde backend.
         if (alert) {
-            alert.textContent = "No se pudieron cargar las patentes desde la BD.";
+            alert.textContent = error.message || error;
             alert.className = "mt-3 text-danger";
         }
     }
@@ -113,25 +97,15 @@ const loadTruckOptions = async (truckSelect, alert) => {
 
 // Construye y envía un registro de kilometraje usando usuario autenticado.
 // Retorna { success, message } para que la UI pueda mostrar estado.
-const submitMileage = async (truckId, mileage, date) => {
+const submitMileage = async (mileage, date) => {
     const user = getAuthUser();
     if (!user) {
         return { success: false, message: "No hay usuario autenticado" };
     }
 
-    // Obtiene id/email del conductor logueado para asociar el registro.
-    const parsedDriverId = Number(user.id);
-    const driverId = Number.isNaN(parsedDriverId) ? null : parsedDriverId;
-    const driverEmail = (user.email || "").trim().toLowerCase();
-    const normalizedPlate = normalizePlate(truckId);
-
     // Objeto de datos normalizado previo al POST.
     const mileageData = {
         // Por ahora se envía la patente; cuando backend mapee patente->id se mantiene compatible.
-        truck_id: normalizedPlate,
-        truck_plate: normalizedPlate,
-        driver_id: driverId,
-        driver_email: driverEmail,
         mileage_value: parseInt(mileage),
         registration_date: date
     };
@@ -152,7 +126,7 @@ const submitMileage = async (truckId, mileage, date) => {
 // - eventos de guardar y limpiar
 export function initMileageForm() {
     const form = document.getElementById("kilometrajeForm");
-    const truckIdInput = document.getElementById("driverTruckId");
+    const assignedTruckContainer = document.getElementById("assignedTruck");
     const mileageInput = document.getElementById("driverMileageValue");
     const dateInput = document.getElementById("driverRouteDate");
     const submitBtn = document.getElementById("saveMileageBtn");
@@ -173,14 +147,14 @@ export function initMileageForm() {
         dateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
-    loadTruckOptions(truckIdInput, alert);
+    loadAssignedTruck(assignedTruckContainer, alert);
 
     // Evento Guardar: valida, envía y muestra resultado.
     submitBtn.addEventListener("click", async (e) => {
         e.preventDefault();
 
         // Validación frontend previa al envío.
-        const error = validateMileageForm(truckIdInput.value, mileageInput.value, dateInput.value);
+        const error = validateMileageForm(mileageInput.value, dateInput.value);
         if (error) {
             if (alert) {
                 alert.textContent = error;
@@ -194,7 +168,6 @@ export function initMileageForm() {
 
         // Envío real del registro.
         const result = await submitMileage(
-            normalizePlate(truckIdInput.value),
             mileageInput.value,
             dateInput.value
         );
@@ -207,7 +180,6 @@ export function initMileageForm() {
 
         // Si guardó correctamente, reinicia campos del formulario.
         if (result.success) {
-            truckIdInput.value = "";
             mileageInput.value = "";
             dateInput.value = new Date().toISOString().split("T")[0];
         }
@@ -217,7 +189,6 @@ export function initMileageForm() {
     if (clearBtn) {
         clearBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            truckIdInput.value = "";
             mileageInput.value = "";
             dateInput.value = new Date().toISOString().split("T")[0];
             if (alert) {

@@ -6,7 +6,7 @@ import Assignment from "../dao/assignmentDAO.js";
 import UserRepository from "../repository/UserRepository.js";
 import MileageRepository from "../repository/MileageRepository.js";
 import TruckRepository from "../repository/TruckRepository.js";
-import AssignmentRepository from "../repository/assignmentRepository.js";
+import AssignmentRepository from "../repository/AssignmentRepository.js";
 
 export const usersService = new UserRepository(new Users())
 export const mileageService = new MileageRepository(new Mileage())

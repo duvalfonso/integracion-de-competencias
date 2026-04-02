@@ -21,12 +21,27 @@ export default class Users {
     return result[0]
   }
 
+  getRoleByUserEmail = async (email) => {
+    const query = 
+    `SELECT
+      u.id,
+      u.full_name,
+      u.email,
+      u.password,
+      r.name AS role
+    FROM users u
+    JOIN roles r ON u.role_id = r.id
+    WHERE u.email = ?`
+    const [result] = await pool.execute(query, [email])
+    return result[0]
+  }
+
   save = async (doc) => {
     const { full_name, email, password } = doc
     if(email === 'super.admin@test.test') {
-      const role = 'superadmin'
-      const query = `INSERT INTO ${this.table} (full_name, email, password, role) VALUES (?, ?, ?, ?)`
-    const [result] = await pool.execute(query, [full_name, email, password, role])
+      const role_id = 2
+      const query = `INSERT INTO ${this.table} (full_name, email, password, role_id) VALUES (?, ?, ?, ?)`
+    const [result] = await pool.execute(query, [full_name, email, password, role_id])
     return result
     }
     const query = `INSERT INTO ${this.table} (full_name, email, password) VALUES (?, ?, ?)`

@@ -34,8 +34,34 @@ const getAllTrucks = async (req, res) => {
   }
 }
 
+const getMyTruck = async (req, res) => {
+  try {
+    const driver_id = req.session.user.id
+
+    const truck = await truckService.getActiveTruckByDriver(driver_id)
+    if(!truck) {
+      return res.status(404).send({ status: "error", error: "No tienes un vehiculo asignado !! 🍵" })
+    }
+
+    res.send({
+      status: "success",
+      payload: {
+        id: truck.id,
+        plate_number: truck.plate_number,
+        brand: truck.brand,
+        model: truck.model,
+        total_mileage: truck.total_mileage
+      }
+    })
+
+  } catch (error) {
+    console.error("Error getmytruck:", error)
+    res.status(500).send({ status: "error", error: error.message })
+  }
+}
 
 export default {
   createTruck,
-  getAllTrucks
+  getAllTrucks,
+  getMyTruck
 }

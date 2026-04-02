@@ -1,60 +1,99 @@
-CREATE DATABASE hirata_db;
+CREATE DATABASE IF NOT EXISTS hirata_db;
 USE hirata_db;
 
-CREATE TABLE users (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  full_name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('superadmin', 'admin', 'driver', 'maintenance') DEFAULT 'driver',
-  is_enabled BOOLEAN DEFAULT TRUE,
-  registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- USUARIOS Y ROLES
+CREATE TABLE roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
 );
+
+INSERT INTO roles (name) VALUES 
+('admin'),
+('superadmin'),
+('driver'),
+('maintenance'),
+('developer');
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role_id INT NOT NULL DEFAULT 3,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+-- CAMIONES
 
 CREATE TABLE trucks (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  plate_number VARCHAR(20) UNIQUE NOT NULL,
-  brand VARCHAR(50) NOT NULL
+  plate_number VARCHAR(20) NOT NULL UNIQUE,
+  brand VARCHAR(50) NOT NULL,
   model VARCHAR(50) NOT NULL,
   year INT NOT NULL,
+  status ENUM('disponible', 'en uso', 'en mantenimiento') DEFAULT 'disponible',
   total_mileage INT DEFAULT 0,
   last_maintenance_mileage INT DEFAULT 0,
   maintenance_threshold INT DEFAULT 5000,
-  status ENUM('en espera', 'en uso', 'en mantenimiento', 'inactivo') DEFAULT 'en espera'
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO trucks (plate_number, brand, model, year, total_mileage, last_maintenance_mileage)
-VALUES
-('A0A0A0', 'marca', 'Modelo', 2025, 1, 0);
+-- ASIGNACIONES (HISTÓRICO)
 
 CREATE TABLE truck_driver (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  driver_id INT NOT NULL,
   truck_id INT NOT NULL,
-  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  driver_id INT NOT NULL,
   active BOOLEAN DEFAULT TRUE,
+  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ended_at TIMESTAMP NULL,
 
-  UNIQUE (driver_id),
-  FOREIGN KEY (driver_id) REFERENCES users(id),
-  FOREIGN KEY (truck_id) REFERENCES trucks(id)
+  FOREIGN KEY (truck_id) REFERENCES trucks(id),
+  FOREIGN KEY (driver_id) REFERENCES users(id)
 );
+
+-- REGISTRO DE KILOMETRAJE
 
 CREATE TABLE mileage_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   truck_id INT NOT NULL,
   driver_id INT NOT NULL,
   mileage_value INT NOT NULL,
+  difference_mileage INT,
   registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
   FOREIGN KEY (truck_id) REFERENCES trucks(id),
   FOREIGN KEY (driver_id) REFERENCES users(id)
 );
 
-CREATE TABLE maintenance_history (
+-- MANTENIMIENTOS
+
+CREATE TABLE maintenances (
   id INT AUTO_INCREMENT PRIMARY KEY,
   truck_id INT NOT NULL,
-  service_date DATE NOT NULL,
-  service_type ENUM('Preventivo', 'Correctivo') NOT NULL,
+  maintenance_mileage INT NOT NULL,
+  type ENUM('preventivo', 'correctivo') DEFAULT 'preventivo',
+  status ENUM('programado', 'en curso', 'completado') DEFAULT 'programado',
+  scheduled_date DATE,
+  start_date DATE,
+  end_date DATE,
   description TEXT NOT NULL,
-  mileage_at_service INT NOT NULL,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
   FOREIGN KEY (truck_id) REFERENCES trucks(id)
+);
+
+-- HISTORIAL DE MANTENIMIENTO
+
+CREATE TABLE maintenance_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  maintenance_id INT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (maintenance_id) REFERENCES maintenances(id)
 );

@@ -175,9 +175,9 @@ const assignTruckToDriver = async (truckId, driverId) => {
 // Reemplazar un conductor asignado a un camion.
 const reassignTruck = async (truckId, driverId) => {
   const response = await fetch(`${API_ASSIGNMENTS_URL}/reassign`, {
-    method: "POST",
+    method: "PUT",
     credentials: "include",
-    headers: { "Content-Type": "application-json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       driver_id: Number(driverId),
       truck_id: Number(truckId)
@@ -391,12 +391,12 @@ if (trucksTableBody) {
       showAlert('Vehículo asignado correctamente', 'success');
       await loadTrucks();
     } catch (error) {
-      if(error.message.includes('ya está asignado')) {
+      if(error.message.includes('ya está en uso')) {
         const confirmReplace = confirm('Este camión ya tiene un conductor asignado. \n¿Deseas reemplazarlo?')
         if(!confirmReplace) return
         await reassignTruck(truckId, driverId)
+        showAlert('Vehículo asignado correctamente', 'success');
       }
-      showAlert(error.message, 'danger');
     }
   });
 }

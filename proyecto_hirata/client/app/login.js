@@ -8,9 +8,13 @@ const ADM_MANT_VIEW_URL = "module/admmantenimiento/admmant.view.html";
 
 // Resuelve la ruta de inicio de acuerdo al rol autenticado.
 const getRedirectByRole = (role) => {
-    if (role === "admin" || role === "superadmin") return ADM_FLOTA_VIEW_URL;
-    if (role === "maintenance") return ADM_MANT_VIEW_URL;
-    return DRIVER_VIEW_URL;
+    const routes = {
+      admin: ADM_FLOTA_VIEW_URL,
+      superadmin: ADM_FLOTA_VIEW_URL,
+      maintenance: ADM_MANT_VIEW_URL,
+      conductor: DRIVER_VIEW_URL
+    }
+    return routes[role] || DRIVER_VIEW_URL
 };
 
 // Muestra un error legible en el contenedor del login.
@@ -90,11 +94,10 @@ document.getElementById("loginForm").addEventListener("submit", async function (
             return;
         }
 
-        // Persiste perfil para control de sesión y redirige según rol.
         const perfil = data.payload;
-
-        // localStorage.setItem("usuarioHirata", JSON.stringify(perfil)); || Se retira funcionalidad de guardar sesión en localstorage para implementar uso de Cookies
+        localStorage.setItem("usuarioHirata", JSON.stringify(perfil));
         
+        // Persiste perfil para control de sesión y redirige según rol.
         window.location.href = getRedirectByRole(perfil.role);
     } catch (error) {
         showError(alerta, error.message || "No se pudo conectar al servidor.");
