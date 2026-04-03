@@ -25,9 +25,24 @@ La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el si
 | 🔴 Quiebre Operativo    | Vehículos inmovilizados por fallas mecánicas inesperadas |
 | ⚫ Impacto Comercial    | Retrasos en entregas y escalada de costos de reparación  |
 
+
+
 ## ✨ Funcionalidades principales
 - **RF-01 · Captura de Kilometraje** — Los conductores registran el kilometraje al finalizar cada recorrido mediante una interfaz de escritorio intuitiva.
 - **RF-02 · Gestión de Flota** — El administrador registra y gestiona perfiles de vehículos y conductores asignados (CRUD completo).
 - **RF-03 · Motor de Alertas Automáticas** — El sistema evalúa umbrales y dispara alertas preventivas al acumularse **5,000 km** desde el último mantenimiento.
 - **RF-04 · Historial de Mantenimiento** — Control total de intervenciones mecánicas con protección contra registros duplicados y trazabilidad garantizada.
 - **RF-05 · Aseguramiento de Calidad** — Validaciones modulares con pruebas unitarias y manejo descriptivo de errores.
+
+## 🏗️ Arquitectura del sistema
+
+El sistema opera en dos frentes simultáneos:
+┌─────────────────────────────┐     ┌──────────────────────────────┐
+│    OFICINAS CENTRALES       │     │     OPERACIÓN DE FLOTA       │
+│    (Infraestructura)        │     │     (Software)               │
+│                             │     │                              │
+│  • Mantenimiento físico     │     │  • App de escritorio Java    │
+│    y lógico de terminales   │     │  • Base de datos MySQL       │
+│  • Actualización de SO      │     │  • Motor de reglas (5000 km) │
+│  • Checklist de control     │     │  • Alertas predictivas       │
+└─────────────────────────────┘     └──────────────────────────────┘
