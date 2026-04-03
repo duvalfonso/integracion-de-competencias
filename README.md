@@ -17,3 +17,10 @@
 
 ## 🔍 Problema que resuelve
 La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el siguiente ciclo destructivo:
+
+|        Etapa            |                     Descripción                           |
+|-------------------------|----------------------------------------------------------|
+| 🔵 Punto Ciego          | Sin monitoreo de kilometraje en tiempo real              |
+| 🟡 Falla Oculta         | Mantenimientos preventivos sistemáticamente omitidos     |
+| 🔴 Quiebre Operativo    | Vehículos inmovilizados por fallas mecánicas inesperadas |
+| ⚫ Impacto Comercial    | Retrasos en entregas y escalada de costos de reparación  |
