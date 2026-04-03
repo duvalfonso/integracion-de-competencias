@@ -19,7 +19,7 @@
 La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el siguiente ciclo destructivo:
 
 |        Etapa            |                     Descripción                           |
-|-------------------------|----------------------------------------------------------|
+|-------------------------|-----------------------------------------------------------|
 | 🔵 Punto Ciego          | Sin monitoreo de kilometraje en tiempo real              |
 | 🟡 Falla Oculta         | Mantenimientos preventivos sistemáticamente omitidos     |
 | 🔴 Quiebre Operativo    | Vehículos inmovilizados por fallas mecánicas inesperadas |
@@ -37,12 +37,34 @@ La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el si
 ## 🏗️ Arquitectura del sistema
 
 El sistema opera en dos frentes simultáneos:
-┌─────────────────────────────┐     ┌──────────────────────────────┐
-│    OFICINAS CENTRALES       │     │     OPERACIÓN DE FLOTA       │
-│    (Infraestructura)        │     │     (Software)               │
-│                             │     │                              │
-│  • Mantenimiento físico     │     │  • App de escritorio Java    │
-│    y lógico de terminales   │     │  • Base de datos MySQL       │
-│  • Actualización de SO      │     │  • Motor de reglas (5000 km) │
-│  • Checklist de control     │     │  • Alertas predictivas       │
-└─────────────────────────────┘     └──────────────────────────────┘
+
+│    OFICINAS CENTRALES           │     OPERACIÓN DE FLOTA       │
+│    (Infraestructura)            │     (Software)               │
+│   ----------------------------- │ -----------------------------│
+│  • Mantenimiento físico         │  • App de escritorio Java    │
+│    y lógico de terminales       │  • Base de datos MySQL       │
+│  • Actualización de SO          │  • Motor de reglas (5000 km) │
+│  • Checklist de control         │  • Alertas predictivas       │
+    
+
+## 🛠️ Stack tecnológico
+
+|           Capa           |     Tecnología     |
+|--------------------------|--------------------|
+| Aplicación de escritorio | Java (Swing / AWT) |
+|      Base de datos       |        MySQL       |
+| Control de versiones     |    Git / GitHub    |
+
+## 📦 Requisitos previos
+
+Antes de instalar el proyecto, asegúrate de tener lo siguiente instalado en el pc:
+
+- [Java JDK 11+](https://www.oracle.com/java/technologies/downloads/)
+- [MySQL 8.0+](https://dev.mysql.com/downloads/)
+- [Node.js](https://nodejs.org/) *(si el proyecto incluye servidor auxiliar)*
+
+
+
+
+
+
