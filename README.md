@@ -11,3 +11,9 @@
 - Actores del sistema
 - Capturas de pantalla
 - Autores
+
+## 📖 Descripción
+**Proyecto Hirata** es un prototipo de sistema informático desarrollado como solución de baja complejidad para la **Etapa 1** de la modernización operativa de Transportes Hirata. El sistema aborda la falta de monitoreo automatizado que generaba un ciclo de fallas no detectadas, mantenimientos omitidos y sobrecostos logísticos.
+
+## 🔍 Problema que resuelve
+La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el siguiente ciclo destructivo:
