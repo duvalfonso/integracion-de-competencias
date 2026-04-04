@@ -20,4 +20,8 @@ export default class TruckRepository extends GenericRepository {
   updateMileage = async (id, newMileage) => {
     return this.update({ id, newMileage })
   }
+
+  getActiveTruckByDriver = async (driver_id) => {
+    return this.dao.getActiveTruckByDriver(driver_id)
+  }
 }

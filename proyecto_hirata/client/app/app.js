@@ -63,14 +63,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Control de acceso por rol: cada tipo de usuario va a su módulo correspondiente.
     const currentPath = window.location.pathname.replace(/\\/g, "/");
-    if (usuario.role === 'admin' || usuario.role === 'superadmin' && !currentPath.includes('admflota.view.html')) {
+
+    if ((usuario.role === 'admin' || usuario.role === 'superadmin') && !currentPath.includes('admflota.view.html')) {
         window.location.href = "../../module/admflota/admflota.view.html";
         return;
     }
+
     if (usuario.role === 'driver' && !currentPath.includes('driver.view.html')) {
         window.location.href = "../../module/driver/driver.view.html";
         return;
     }
+
     if (usuario.role === 'maintenance' && !currentPath.includes('admmant.view.html')) {
         window.location.href = "../../module/admmantenimiento/admmant.view.html";
         return;

@@ -43,8 +43,8 @@ const deleteUser = async (req, res) => {
 }
 
 export default {
-  deleteUser,
-  getAllUsers,
   getUser,
-  updateUser
+  getAllUsers,
+  updateUser,
+  deleteUser
 }

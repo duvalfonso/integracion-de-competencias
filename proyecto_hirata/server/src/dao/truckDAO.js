@@ -13,17 +13,31 @@ export default class Truck {
   }
 
   getBy = async (params) => {
-      const key = Object.keys(params)[0]
-      const value = Object.values(params)[0]
+    const key = Object.keys(params)[0]
+    const value = Object.values(params)[0]
 
-      if(value === undefined) {
-        throw new Error(`El valor para la busqueda por ${key} es undefined`)
-      }
-  
-      const query = `SELECT * FROM ${this.table} WHERE ${key} = ? LIMIT 1`
-      const [result] = await pool.execute(query, [value])
-      return result[0]
+    if(value === undefined) {
+      throw new Error(`El valor para la busqueda por ${key} es undefined`)
     }
+
+    const query = `SELECT * FROM ${this.table} WHERE ${key} = ? LIMIT 1`
+    const [result] = await pool.execute(query, [value])
+    return result[0]
+  }
+
+  getActiveTruckByDriver = async (driver_id) => {
+    const query = `
+      SELECT t.*
+      FROM ${this.table} t
+      INNER JOIN truck_driver td ON t.id = td.truck_id
+      WHERE td.driver_id = ?
+        AND td.active = TRUE
+        AND t.active = TRUE
+      LIMIT 1
+    `
+    const [result] = await pool.execute(query, [driver_id])
+    return result[0] || null
+  }
 
   save = async (doc)=> {
     const {
