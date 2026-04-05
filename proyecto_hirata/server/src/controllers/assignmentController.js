@@ -1,4 +1,4 @@
-import { usersService, truckService, assignmentService } from "../services/index.js"
+import { assignmentService } from "../services/index.js"
 
 const getAllAssignments = async (req, res) => {
   try {

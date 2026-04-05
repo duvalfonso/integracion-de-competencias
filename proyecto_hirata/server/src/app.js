@@ -9,6 +9,7 @@ import sessionRouter from './routes/sessions.router.js'
 import mileageRouter from './routes/mileage.router.js'
 import truckRouter from './routes/truck.router.js'
 import assignmentRouter from './routes/assignment.router.js'
+import notificationRouter from './routes/notification.router.js'
 
 const app = express()
 
@@ -58,6 +59,7 @@ app.use('/api/assignments', assignmentRouter)
 
 app.use('/api/mileageLogs', mileageRouter)
 app.use('/api/trucks', truckRouter)
+app.use('/api/notifications', notificationRouter)
 
 app.listen(PORT, ()=> {
   console.log(`Servidor escuchando en el puerto ${PORT}` )

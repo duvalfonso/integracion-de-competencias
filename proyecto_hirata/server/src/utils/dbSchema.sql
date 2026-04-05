@@ -97,3 +97,26 @@ CREATE TABLE maintenance_logs (
 
   FOREIGN KEY (maintenance_id) REFERENCES maintenances(id)
 );
+
+CREATE TABLE notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100),
+  message TEXT NOT NULL,
+  type ENUM('mantenimiento', 'asignacion', 'sistema', 'error') DEFAULT 'sistema',
+  reference_id INT,
+  reference_type VARCHAR(50),
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+SET GLOBAL event_scheduler = ON;
+
+CREATE EVENT clean_old_notifications
+ON SCHEDULE EVERY 1 DAY
+COMMENT 'Elimina notificaciones con más de 6 meses de antiguedad'
+DO
+  DELETE FROM notifications
+  WHERE created_at < DATE_SUB(NOW(), INTERVAL 6 MONTH);

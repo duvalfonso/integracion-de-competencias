@@ -16,9 +16,9 @@ const updateUser = async (req, res) => {
   try {
     const userId = req.params.uid
 
-    const { role, full_name, is_enabled } = req.body
+    const { role_id, full_name, is_enabled } = req.body
     const updateBody = {}
-    if(role) updateBody.role = role
+    if(role_id) updateBody.role_id = role_id
     if(full_name) updateBody.full_name = full_name
     if(is_enabled !== undefined) updateBody.is_enabled = is_enabled
 

@@ -1,4 +1,4 @@
-import { mileageService, truckService } from '../services/index.js'
+import { mileageService } from '../services/index.js'
 
 const getAllMileageLogs = async (req, res) => {
   try {
