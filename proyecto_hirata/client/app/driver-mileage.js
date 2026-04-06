@@ -94,6 +94,13 @@ export function initMileageForm() {
 
         const previousMileage = Number(assignedTruckContainer?.dataset?.initialMileage || 0);
         const nextMileage = Number(mileageInput.value);
+
+        if (nextMileage <= previousMileage) {
+            if (alert) {
+                setAlert(alert, `El kilometraje debe ser mayor a ${previousMileage}`, "warning");
+            }
+            return;
+        }
         const crossedMaintenanceBlock = getMileageBlock(nextMileage) > getMileageBlock(previousMileage);
 
         if (crossedMaintenanceBlock && alert) {
