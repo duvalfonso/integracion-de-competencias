@@ -33,6 +33,26 @@ export default class Mileage {
       }
       const truck = assignmentRows[0]
 
+      // Se prioriza el último mantenimiento real completado para evitar depender de múltiplos exactos.
+      const [maintenanceRows] = await connection.query(
+        `SELECT maintenance_mileage
+        FROM maintenances
+        WHERE truck_id = ?
+          AND status = 'completado'
+          AND active = true
+        ORDER BY maintenance_mileage DESC, id DESC
+        LIMIT 1`,
+        [truck.truck_id]
+      )
+
+      const latestCompletedMaintenanceMileage = maintenanceRows.length > 0
+        ? Number(maintenanceRows[0].maintenance_mileage) || 0
+        : 0
+      const effectiveLastMaintenanceMileage = Math.max(
+        Number(truck.last_maintenance_mileage) || 0,
+        latestCompletedMaintenanceMileage
+      )
+
       // Validación de kilometraje correcto
       if(mileage_value <= truck.total_mileage) {
         throw new Error(`El kilometraje debe ser mayor a ${truck.total_mileage}`)
@@ -47,36 +67,33 @@ export default class Mileage {
       )
 
       // Logica de manteninmiento
-      const mileageSinceLastService = mileage_value - truck.last_maintenance_mileage
+      const previousMileageSinceLastService = truck.total_mileage - effectiveLastMaintenanceMileage
+      const mileageSinceLastService = mileage_value - effectiveLastMaintenanceMileage
       const needsMaintenance = mileageSinceLastService >= truck.maintenance_threshold
+      const maintenanceThreshold = truck.maintenance_threshold
+      const previousThresholdBlock = maintenanceThreshold > 0
+        ? Math.floor(previousMileageSinceLastService / maintenanceThreshold)
+        : 0
+      const currentThresholdBlock = maintenanceThreshold > 0
+        ? Math.floor(mileageSinceLastService / maintenanceThreshold)
+        : 0
+      const shouldSendMaintenanceNotification = currentThresholdBlock > previousThresholdBlock
 
       // Actualizar camion
       await connection.query(
         `UPDATE trucks
-        SET total_mileage = ?, status = ?
+        SET total_mileage = ?, status = ?, last_maintenance_mileage = ?
         WHERE id = ?`,
         [
           mileage_value, 
-          needsMaintenance ? 'en mantenimiento' : 'disponible',
+          needsMaintenance ? 'en mantenimiento' : 'en uso',
+          effectiveLastMaintenanceMileage,
           truck.truck_id
         ]
       )
 
-      // Cerrar asginación actual para disponibilizar el camión
-      await connection.query(
-        `UPDATE truck_driver
-        SET 
-          active = false,
-          ended_at = ?
-        WHERE id = ?`,
-        [
-          registration_date || new Date(),
-          truck.id
-        ]
-      )
-
-      // Generar notificaciones si requiere mantenimiento
-      if(needsMaintenance) {
+      // Generar notificaciones cuando cruza un nuevo bloque de mantenimiento (5000, 10000, 15000, etc.)
+      if(shouldSendMaintenanceNotification) {
         const [recipients] = await connection.query(
           //Buscar los roles correspondientes a admin, superadmin y mantenimiento activos
           `SELECT id FROM users WHERE role_id IN (1, 2, 4) AND active = true`
@@ -84,7 +101,7 @@ export default class Mileage {
 
         if(recipients.length > 0) {
           const title = `Mantenimiento Requerido`
-          const message = `El vehículo [${truck.plate_number}] ha superado el umbral de ${truck.maintenance_threshold} km. Estado cambiado a: En mantenimiento.`
+          const message = `El vehículo [${truck.plate_number}] alcanzó ${mileageSinceLastService} km desde su último mantenimiento.`
           const type = 'mantenimiento'
           const reference_type = 'truck'
 

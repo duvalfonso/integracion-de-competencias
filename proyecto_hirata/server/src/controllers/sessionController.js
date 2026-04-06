@@ -31,11 +31,11 @@ const login = async (req, res) => {
     }
   
     const user = await usersService.getUserWithRoleByUserEmail(email) // se realiza busqueda de usuario con el email indicado
-    if (!user) return res.status(404).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." }) // en caso de no encontrar resultados con el mail indicado se informa.
+    if (!user) return res.status(404).send({ status: "error", error: "Email no encontrado." }) // en caso de no encontrar resultados con el mail indicado se informa.
   
     // se verifica si el password coincide con el correcto y en caso contrario se informa que alguno de los campos no es correcto para no entregar información sensible.
     const isValid = await passwordValidation(user, password)
-    if (!isValid) return res.status(400).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." })
+    if (!isValid) return res.status(400).send({ status: "error", error: "Contraseña incorrecta." })
     
     // Luego de estas validaciones, se retira de la información del usuario los campos sensibles (password) y se entregan al lado del cliente el resto de los datos para su renderizado
     const userDTO = UserDTO.getUserTokenFrom(user)
