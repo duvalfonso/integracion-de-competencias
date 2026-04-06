@@ -40,7 +40,7 @@ const getMyTruck = async (req, res) => {
 
     const truck = await truckService.getActiveTruckByDriver(driver_id)
     if(!truck) {
-      return res.status(404).send({ status: "error", error: "No tienes un vehiculo asignado !! 🍵" })
+      return res.status(404).send({ status: "error", error: "No tienes un vehiculo asignado !! Coffe Break 🍵" })
     }
 
     res.send({

@@ -31,7 +31,11 @@ const login = async (req, res) => {
     }
   
     const user = await usersService.getUserWithRoleByUserEmail(email) // se realiza busqueda de usuario con el email indicado
-    if (!user) return res.status(404).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." }) // en caso de no encontrar resultados con el mail indicado se informa.
+
+    // En caso de que no se encuentre el usuario o que la combinación de usuario y contraseña sea incorrecta se envía un mensaje que solicite rectificar.
+    // Por motivos de seguridad NO se entrega información que pueda ser sensible a posibles ataques externos. Si un externo encuentra un email que si está en la base de datos recibirá el mensaje de que la contraseña es incorrecta, lo cual le confirmará que logró decifrar un email correcto. Es por esto que se entrega un mensaje genérico independiente del correo o contraseña.
+
+    if (!user) return res.status(404).send({ status: "error", error: "No se ha encontrado la combinación de usuario y contraseña indicados." })
   
     // se verifica si el password coincide con el correcto y en caso contrario se informa que alguno de los campos no es correcto para no entregar información sensible.
     const isValid = await passwordValidation(user, password)
