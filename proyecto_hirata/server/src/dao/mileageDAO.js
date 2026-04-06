@@ -77,20 +77,35 @@ export default class Mileage {
 
       // Generar notificaciones si requiere mantenimiento
       if(needsMaintenance) {
+
+        const [scheduledMaintenances] = await connection.query(
+          `SELECT scheduled_date FROM maintenances
+          WHERE truck_id = ? AND status = 'programado' AND active = true
+          ORDER BY scheduled_date ASC LIMIT 1`,
+          [truck.truck_id]
+        )
+
+        const hasScheduled = scheduledMaintenances.length > 0
+
+        const title = `Mantenimiento Requerido: ${truck.plate_number}`
+        let message = `El vehículo [${truck.plate_number}] superó el umbral de mantenimiento preventivo (${mileageSinceLastService} km recorridos)`
+
+        if(hasScheduled) {
+          const date = new Date(scheduledMaintenances[0].scheduled_date).toLocaleDateString()
+          message += `INFO: Ya existe un manteimiento agendado para el día ${date}`
+        } else {
+          message += `ADVERTENCIA: No se encontró un agendamiento para el mantenimiento. Por favor programar mantenimiento.`
+        }
+
         const [recipients] = await connection.query(
           //Buscar los roles correspondientes a admin, superadmin y mantenimiento activos
           `SELECT id FROM users WHERE role_id IN (1, 2, 4) AND active = true`
         )
 
         if(recipients.length > 0) {
-          const title = `Mantenimiento Requerido`
-          const message = `El vehículo [${truck.plate_number}] ha superado el umbral de ${truck.maintenance_threshold} km. Estado cambiado a: En mantenimiento.`
-          const type = 'mantenimiento'
-          const reference_type = 'truck'
-
           // Preparación de insert masivo iterando los todos los usuarios resultantes de los roles obtenidos.
           const notificationValues = recipients.map(user => [
-            user.id, title, message, type, truck.truck_id, reference_type
+            user.id, title, message, 'mantenimiento', truck.truck_id, 'truck'
           ])
 
           await connection.query(
