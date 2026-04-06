@@ -5,7 +5,6 @@
     --hirata-azul-oscuro: #002B5B;
     --hirata-azul-claro: #2B4865;
     --hirata-naranja: #f76c02;
-
     --fondo-app: #F5F7FA;
     --borde-radio: 12px;
 }
@@ -19,7 +18,7 @@ body {
 }
 
 /* =========================================
-   3. BOTONES
+   3. BOTONES & INPUTS
 ========================================= */
 .btn-primary {
     background-color: var(--hirata-azul-oscuro) !important;
@@ -34,9 +33,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* =========================================
-   4. INPUTS / FORMULARIOS
-========================================= */
 .form-control {
     border-radius: 8px;
     border: 1px solid #cbd5e1;
@@ -48,7 +44,7 @@ body {
 }
 
 /* =========================================
-   5. CARDS
+   4. CARDS & NAVBAR
 ========================================= */
 .card {
     border-radius: var(--borde-radio);
@@ -56,83 +52,150 @@ body {
     border: none;
 }
 
-/* =========================================
-   6. NAVBAR
-========================================= */
 .navbar {
     background-color: var(--hirata-azul-oscuro) !important;
 }
 
 /* =========================================
-    7. SIDEBAR ADM FLOTA
+   5. NOTIFICACIONES (DROPDOWN)
 ========================================= */
-.adm-sidebar {
-    position: sticky;
-    top: 1rem;
-    min-height: auto;
-    border-right: none;
-}
-
-.adm-sidebar-link {
-    display: block;
-    padding: 10px 12px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #334155;
-    background: #f8fafc;
+.nav-notification-menu {
+    width: min(440px, 92vw);
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
-    transition: all 0.2s ease;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
 }
 
-.adm-sidebar-link:hover {
-    color: var(--hirata-azul-oscuro);
-    background: rgba(0, 43, 91, 0.08);
-    border-color: rgba(0, 43, 91, 0.25);
+.nav-logout-confirm {
+    white-space: nowrap;
 }
 
-.adm-sidebar-link.active {
-    color: #ffffff;
-    background: var(--hirata-azul-oscuro);
-    border-color: var(--hirata-azul-oscuro);
+.nav-logout-confirm .btn {
+    min-width: 88px;
 }
 
-.adm-sidebar.is-collapsed .adm-sidebar-label {
-    display: none;
+@media (max-width: 575.98px) {
+    .nav-logout-confirm {
+        justify-content: flex-end;
+        white-space: normal;
+        gap: 6px;
+    }
+
+    .nav-logout-confirm .btn {
+        min-width: 0;
+        padding-inline: 0.65rem;
+    }
 }
 
-.adm-sidebar.is-collapsed .adm-sidebar-title {
-    display: none;
+.nav-notification-item {
+    border: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px; /* Espaciado uniforme */
 }
 
-.adm-sidebar.is-collapsed .adm-sidebar-header {
-    justify-content: center !important;
+.nav-notification-item:last-child {
+    border-bottom: 0;
 }
 
-.adm-sidebar.is-collapsed .adm-sidebar-link {
+.nav-notification-item-unread {
+    background: #f0f4f8; /* Fondo sutil para no leídas */
+}
+
+/* SOLUCIÓN AL PROBLEMA VERTICAL: Usamos Flexbox estable */
+.nav-notification-item-row {
     display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+/* Si el punto no existe, conservamos el espacio invisible para alinear textos */
+.nav-notification-dot-wrapper {
+    width: 8px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+.nav-notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--hirata-naranja);
+}
+
+/* Manejo de textos largos */
+.nav-notification-content {
+    flex-grow: 1;
+    min-width: 0; /* Previene que textos largos rompan el Flexbox */
+}
+
+.nav-notification-content .fw-semibold,
+.nav-notification-content .text-muted {
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.nav-notification-close-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0; /* Evita que el botón se comprima */
+    padding: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-.adm-sidebar.is-collapsed .adm-sidebar-link i {
-    margin-right: 0 !important;
+.nav-notification-confirm {
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #ffffff;
 }
 
-#contentCol .adm-section {
-    scroll-margin-top: 1rem;
-}
-
+/* =========================================
+   6. RESPONSIVE / MÓVIL
+========================================= */
 @media (max-width: 991.98px) {
-    .adm-sidebar {
-        position: static;
-        top: auto;
+    body.mobile-notifications-open {
+        overflow: hidden;
+        touch-action: none;
     }
 
-    #sidebarCol {
-        margin-bottom: 0;
+    .nav-notification-menu {
+        position: fixed !important; /* Desvincula la caja del navbar */
+        top: 65px !important; /* Lo baja justo debajo de tu navbar */
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important; /* Lo centra de forma absoluta */
+        width: calc(100vw - 32px) !important; /* Le da 16px de margen a cada lado */
+        max-width: 400px;
+        max-height: calc(100dvh - 90px) !important; /* Evita que choque con el fondo */
+        margin-top: 0;
+        border-radius: 12px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
     }
 
-    #sidebarCol .card-body {
-        padding-bottom: 0.75rem;
+    .nav-notification-menu .border-bottom {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #ffffff;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .nav-notification-confirm-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
     }
 }

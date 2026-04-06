@@ -26,9 +26,8 @@
             class="badge text-bg-light me-3 align-self-center"
             id="personajeBadge"
           ></span>
-          <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">
-            Salir
-          </button>
+          <div id="notificationNavSlot" class="me-3 align-self-center"></div>
+          <div id="logoutNavSlot" class="me-3 align-self-center"></div>
         </div>
       </div>
     </nav>
@@ -143,14 +142,6 @@
                       max="2100"
                       required
                     />
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <label for="truckDriver" class="form-label"
-                      >Conductor asignado</label
-                    >
-                    <select id="truckDriver" class="form-select">
-                      <option value="">Selecciona conductor</option>
-                    </select>
                   </div>
                   <div class="col-12 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
