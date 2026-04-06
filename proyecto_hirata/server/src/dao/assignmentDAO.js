@@ -27,6 +27,24 @@ export default class Assignment {
     try {
       await connection.beginTransaction()
 
+      const [truckData] = await connection.query(
+        `SELECT status, plate_number FROM trucks WHERE id = ? FOR UPDATE`,
+        [truck_id]
+      )
+
+      if(truckData.length === 0) throw new Error('El vehículo no existe')
+      const truck = truckData[0]
+
+      if(truck.status === 'en mantenimiento') {
+        throw new Error(`Operación denegada: El vehículo [${truck.plate_number}] se encuentra en mantenimiento y no puede ser operado.`)
+      }
+
+      if(truck.status === 'en uso') {
+        const error = new Error(`El vehículo [${truck.plate_number}] ya cuenta con un conductor asignado.`)
+        error.code = 'TRUCK_ALREADY_IN_USE'
+        throw error
+      }
+
       // Validar driver sin asignación activa
       const [driverActive] = await connection.query(
         `SELECT * FROM truck_driver 
@@ -81,24 +99,16 @@ export default class Assignment {
     try {
       await connection.beginTransaction()
 
-      // Obtener asignación activa del camión
-      const [current] = await connection.query(
-        `SELECT * FROM truck_driver 
-        WHERE truck_id = ? AND active = true 
-        FOR UPDATE`,
-        [truck_id]
+      const [driverCheck] = await connection.query(
+        `SELECT id FROM truck_driver WHERE driver_id = ? AND active = true FOR UPDATE`, [driver_id]
       )
 
-      if (current.length === 0) {
-        throw new Error('El camión no tiene asignación activa')
-      }
+      if(driverCheck.length > 0) throw new Error('El nuevo conductor seleccionado ya tiene otra asignación activa.')
 
       // Desactivar asignación actual
       await connection.query(
-        `UPDATE truck_driver 
-        SET active = false 
-        WHERE id = ?`,
-        [current[0].id]
+        `UPDATE truck_driver SET active = false, ended_at = NOW()
+        WHERE truck_id = ? AND active = true`, [truck_id]
       )
 
       // Crear nueva asignación
@@ -107,6 +117,8 @@ export default class Assignment {
         VALUES (?, ?, true, NOW())`,
         [driver_id, truck_id]
       )
+
+      await connection.query(`UPDATE trucks SET status = 'en uso' WHERE id = ?`, [truck_id])
 
       await connection.commit()
       return result
