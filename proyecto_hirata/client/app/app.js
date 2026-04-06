@@ -1,8 +1,11 @@
 import { requestJson, escapeHtml, lockBodyScroll, unlockBodyScroll } from "./shared.js"
 const API_CURRENT_URL = "http://localhost:8000/api/sessions/current";
 const API_LOGOUT_URL = "http://localhost:8000/api/sessions/logout"
+const API_TRUCKS_URL = "http://localhost:8000/api/trucks"
 const API_NOTIFICATIONS_URL = "http://localhost:8000/api/notifications"
 const ADMIN_NOTIFICATION_ROLES = new Set(["admin", "superadmin", "maintenance"])
+const MAINTENANCE_BLOCK_SIZE = 5000
+const DISMISSED_MAINTENANCE_NOTIFICATIONS_KEY = "hirataDismissedMaintenanceNotifications"
 // Solcita cierre de sesión al backend y redirige al login correcto.
 const cerrarSesion = async () => {
     try {
@@ -16,7 +19,6 @@ const cerrarSesion = async () => {
         window.location.href = getLoginPath();
     }
 };
-//
 
 // Expone cerrarSesion al scope global para que pueda invocarse desde botones inline en HTML.
 window.cerrarSesion = cerrarSesion;
@@ -131,6 +133,74 @@ const formatNotificationDate = (isoDate) => {
     })
 
 }
+
+const getMileageBlock = (value) => Math.floor(Number(value || 0) / MAINTENANCE_BLOCK_SIZE)
+const readDismissedMaintenanceNotifications = () => {
+
+    try {
+        const rawValue = localStorage.getItem(DISMISSED_MAINTENANCE_NOTIFICATIONS_KEY)
+        return new Set(Array.isArray(JSON.parse(rawValue)) ? JSON.parse(rawValue) : [])
+    } catch {
+        return new Set()
+    }
+}
+
+const saveDismissedMaintenanceNotifications = (notificationIds) => {
+    localStorage.setItem(
+        DISMISSED_MAINTENANCE_NOTIFICATIONS_KEY,
+        JSON.stringify(Array.from(notificationIds))
+    )
+}
+
+const dismissMaintenanceNotification = (notificationId) => {
+    const dismissedNotifications = readDismissedMaintenanceNotifications()
+    dismissedNotifications.add(String(notificationId))
+    saveDismissedMaintenanceNotifications(dismissedNotifications)
+}
+
+const dismissManyMaintenanceNotifications = (notificationIds) => {
+    const dismissedNotifications = readDismissedMaintenanceNotifications()
+    for (const notificationId of notificationIds) {
+        dismissedNotifications.add(String(notificationId))
+    }
+    saveDismissedMaintenanceNotifications(dismissedNotifications)
+}
+
+const buildFrontendMaintenanceNotifications = (trucks) => {
+
+    const dismissedNotifications = readDismissedMaintenanceNotifications()
+    return trucks
+        .filter((truck) => Number(truck.total_mileage || 0) > 0)
+        .filter((truck) => getMileageBlock(truck.total_mileage) > getMileageBlock(truck.last_maintenance_mileage))
+        .map((truck) => {
+            const mileageBlock = getMileageBlock(truck.total_mileage)
+            return {
+            id: `maintenance-${truck.id}-${mileageBlock}`,
+            title: "Mantenimiento preventivo requerido",
+            message: `El camión ${truck.plate_number} alcanzó ${truck.total_mileage} km y ya superó su bloque de mantenimiento de ${MAINTENANCE_BLOCK_SIZE} km.`,
+            created_at: truck.created_at,
+            is_read: false,
+            __frontendOnly: true,
+            __truckId: truck.id,
+            __mileageBlock: mileageBlock
+            }
+        })
+
+        .filter((notification) => !dismissedNotifications.has(notification.id))
+}
+
+
+
+const fetchMaintenanceTrucks = async () => {
+
+    const data = await requestJson(API_TRUCKS_URL, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+    }, "No se pudieron cargar los camiones")
+    return Array.isArray(data.payload) ? data.payload : []
+}
+
 const fetchUserNotifications = async () => {
     const data = await requestJson(API_NOTIFICATIONS_URL, {
         method: "GET",
@@ -251,6 +321,7 @@ const initAdminNotifications = (usuario) => {
                 const safeTitle = escapeHtml(item.title || "Notificación")
                 const safeMessage = escapeHtml(item.message || "")
                 const safeDate = escapeHtml(formatNotificationDate(item.created_at))
+                const isFrontendOnly = Boolean(item.__frontendOnly)
                 const isPendingConfirm = String(item.id) === String(pendingCloseNotificationId)
                 const closeActionsHtml = item.is_read
                     ? ""
@@ -303,9 +374,15 @@ const initAdminNotifications = (usuario) => {
     }
     const loadNotifications = async () => {
         try {
-            const items = await fetchUserNotifications()
-            cachedNotifications = items
-            renderNotifications(items)
+            const [items, trucks] = await Promise.all([
+                fetchUserNotifications(),
+                fetchMaintenanceTrucks()
+            ])
+            const frontendMaintenanceNotifications = buildFrontendMaintenanceNotifications(trucks)
+            const mergedItems = [...frontendMaintenanceNotifications, ...items]
+                .filter((item, index, array) => index === array.findIndex((candidate) => candidate.id === item.id))
+            cachedNotifications = mergedItems
+            renderNotifications(mergedItems)
         } catch (error) {
             showLoadError(error.message || "Error cargando notificaciones")
         }
@@ -331,7 +408,12 @@ const initAdminNotifications = (usuario) => {
 
             if (action === "mark-all-confirm") {
                 try {
+                        const frontendOnlyNotificationIds = cachedNotifications
+                            .filter((notification) => notification.__frontendOnly)
+                            .map((notification) => notification.id)
+
                     await markAllNotificationsAsRead()
+                        dismissManyMaintenanceNotifications(frontendOnlyNotificationIds)
                     pendingMarkAllConfirm = false
                     pendingCloseNotificationId = null
                     await loadNotifications()
@@ -362,7 +444,14 @@ const initAdminNotifications = (usuario) => {
 
             if (action === "confirm-close") {
                 try {
-                    await markNotificationAsRead(notificationId)
+                    const notification = cachedNotifications.find((item) => String(item.id) === String(notificationId))
+                    if (notification?.__frontendOnly) {
+
+                        dismissMaintenanceNotification(notificationId)
+
+                    } else {
+                        await markNotificationAsRead(notificationId)
+                    }
                     pendingCloseNotificationId = null
 
                     await loadNotifications()
@@ -392,7 +481,6 @@ const getCurrentUser = async () => {
     })
 
     if(!res.ok) return null
-
     const data = await res.json()
 
     return data.payload

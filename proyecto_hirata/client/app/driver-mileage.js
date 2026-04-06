@@ -97,15 +97,10 @@ export function initMileageForm() {
 
         if (nextMileage <= previousMileage) {
             if (alert) {
-                setAlert(
-                    alert,
-                    `El kilometraje ingresado debe ser mayor al actual (${previousMileage} km).`,
-                    "danger"
-                );
+                setAlert(alert, `El kilometraje debe ser mayor a ${previousMileage}`, "warning");
             }
             return;
         }
-
         const crossedMaintenanceBlock = getMileageBlock(nextMileage) > getMileageBlock(previousMileage);
 
         if (crossedMaintenanceBlock && alert) {
