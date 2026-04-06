@@ -475,11 +475,14 @@ const initAdminNotifications = (usuario) => {
 }
 const getCurrentUser = async () => {
   try {
+
     const res = await fetch(API_CURRENT_URL, {
       credentials: "include"
     })
+
     if(!res.ok) return null
     const data = await res.json()
+
     return data.payload
 
   } catch (error) {

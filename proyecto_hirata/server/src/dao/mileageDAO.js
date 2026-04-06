@@ -18,70 +18,104 @@ export default class Mileage {
     try {
       await connection.beginTransaction()
 
-      const [assignment] = await connection.query(
-        `SELECT * FROM truck_driver
-        WHERE driver_id = ? AND active = true
+      // Se obtienen los datos del camión y su asignación activa
+      const [assignmentRows] = await connection.query(
+        `SELECT td.id, td.truck_id, t.plate_number, t.total_mileage, t.last_maintenance_mileage, t.maintenance_threshold
+        FROM truck_driver td
+        JOIN trucks t ON td.truck_id = t.id
+        WHERE td.driver_id = ? AND td.active = true
         FOR UPDATE`,
         [driver_id]
       )
 
-      if(assignment.length === 0) {
+      if(assignmentRows.length === 0) {
         throw new Error('El conductor no tiene un camion asignado')
       }
+      const truck = assignmentRows[0]
 
-      const truck_id = assignment[0].truck_id
-
-      const [truckRows] = await connection.query(
-        `SELECT total_mileage, last_maintenance_mileage
-        FROM trucks
-        WHERE id = ?
-        FOR UPDATE`,
-        [truck_id]
+      // Se prioriza el último mantenimiento real completado para evitar depender de múltiplos exactos.
+      const [maintenanceRows] = await connection.query(
+        `SELECT maintenance_mileage
+        FROM maintenances
+        WHERE truck_id = ?
+          AND status = 'completado'
+          AND active = true
+        ORDER BY maintenance_mileage DESC, id DESC
+        LIMIT 1`,
+        [truck.truck_id]
       )
 
-      if(truckRows === 0) {
-        throw new Error('Vehiculo no encontrado')
-      }
+      const latestCompletedMaintenanceMileage = maintenanceRows.length > 0
+        ? Number(maintenanceRows[0].maintenance_mileage) || 0
+        : 0
+      const effectiveLastMaintenanceMileage = Math.max(
+        Number(truck.last_maintenance_mileage) || 0,
+        latestCompletedMaintenanceMileage
+      )
 
-      const truck = truckRows[0]
-
+      // Validación de kilometraje correcto
       if(mileage_value <= truck.total_mileage) {
         throw new Error(`El kilometraje debe ser mayor a ${truck.total_mileage}`)
       }
 
+      // Registrar el kilometraje
       await connection.query(
         `INSERT INTO ${this.table}
         (truck_id, driver_id, mileage_value, registration_date)
         VALUES (?, ?, ?, ?)`,
-        [truck_id, driver_id, mileage_value, registration_date ? registration_date : NOW()]
+        [truck.truck_id, driver_id, mileage_value, registration_date || new Date()]
       )
 
-      const mileageSinceLastService = mileage_value - truck.last_maintenance_mileage
-
+      // Logica de manteninmiento
+      const previousMileageSinceLastService = truck.total_mileage - effectiveLastMaintenanceMileage
+      const mileageSinceLastService = mileage_value - effectiveLastMaintenanceMileage
       const needsMaintenance = mileageSinceLastService >= truck.maintenance_threshold
+      const maintenanceThreshold = truck.maintenance_threshold
+      const previousThresholdBlock = maintenanceThreshold > 0
+        ? Math.floor(previousMileageSinceLastService / maintenanceThreshold)
+        : 0
+      const currentThresholdBlock = maintenanceThreshold > 0
+        ? Math.floor(mileageSinceLastService / maintenanceThreshold)
+        : 0
+      const shouldSendMaintenanceNotification = currentThresholdBlock > previousThresholdBlock
 
+      // Actualizar camion
       await connection.query(
         `UPDATE trucks
-        SET total_mileage = ?, status = ?
+        SET total_mileage = ?, status = ?, last_maintenance_mileage = ?
         WHERE id = ?`,
         [
           mileage_value, 
-          needsMaintenance ? 'en mantenimiento' : 'disponible',
-          truck_id
+          needsMaintenance ? 'en mantenimiento' : 'en uso',
+          effectiveLastMaintenanceMileage,
+          truck.truck_id
         ]
       )
 
-      await connection.query(
-        `UPDATE truck_driver
-        SET 
-          active = false,
-          ended_at = ?
-        WHERE id = ?`,
-        [
-          registration_date || new Date(),
-          assignment[0].id
-        ]
-      )
+      // Generar notificaciones cuando cruza un nuevo bloque de mantenimiento (5000, 10000, 15000, etc.)
+      if(shouldSendMaintenanceNotification) {
+        const [recipients] = await connection.query(
+          //Buscar los roles correspondientes a admin, superadmin y mantenimiento activos
+          `SELECT id FROM users WHERE role_id IN (1, 2, 4) AND active = true`
+        )
+
+        if(recipients.length > 0) {
+          const title = `Mantenimiento Requerido`
+          const message = `El vehículo [${truck.plate_number}] alcanzó ${mileageSinceLastService} km desde su último mantenimiento.`
+          const type = 'mantenimiento'
+          const reference_type = 'truck'
+
+          // Preparación de insert masivo iterando los todos los usuarios resultantes de los roles obtenidos.
+          const notificationValues = recipients.map(user => [
+            user.id, title, message, type, truck.truck_id, reference_type
+          ])
+
+          await connection.query(
+            `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type) VALUES ?`,
+            [notificationValues]
+          )
+        }
+      }
 
       await connection.commit()
       return { 

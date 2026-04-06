@@ -1,70 +1,43 @@
-# 🚛 Proyecto Hirata — Modernización
-**Sistema de gestión y trazabilidad de flota** para Transportes Hirata. Automatiza el monitoreo de kilometraje, genera alertas preventivas de mantenimiento y centraliza la operación logística en una sola plataforma.
-## 📋 Tabla de Contenidos
-- Descripción
-- Problema que resuelve
-- Funcionalidades principales
-- Arquitectura del sistema
-- Stack tecnológico
-- Requisitos previos
-- Instalación y ejecución
-- Actores del sistema
-- Capturas de pantalla
-- Autores
+# Sistema de Gestión de Flota - Empresa Hirata
+## Descripción del Proyecto
+Solución informática integral diseñada para automatizar el ciclo de vida de la flota de camiones de Transportes Hirata. El sistema permite el registro de conductores, la asignación de vehículos y el control estricto del kilometraje para disparar alertas de mantenimiento preventivo cada **5,000 km**.
+Arquitectura del Sistema
 
-## 📖 Descripción
-**Proyecto Hirata** es un prototipo de sistema informático desarrollado como solución de baja complejidad para la **Etapa 1** de la modernización operativa de Transportes Hirata. El sistema aborda la falta de monitoreo automatizado que generaba un ciclo de fallas no detectadas, mantenimientos omitidos y sobrecostos logísticos.
+## Frontend 
+Ubicado en la carpeta client, construido con tecnologías estándar para asegurar ligereza y compatibilidad:
+* 	Vistas (HTML/Bootstrap ): Interfaces adaptables para escritorio y móviles.
+* 	Lógica de Cliente (JavaScript ES6): * app.js: Gestión global de sesiones, protección de rutas por rol y control de la barra de navegación.
+* 	login.js: Gestión de autenticación y redirección inteligente según el perfil.
+* 	admflota.js: CRUD de camiones, registro de conductores y asignación dinámica de flota.
+* 	driver-mileage.js: Formulario especializado para que los conductores reporten sus recorridos.
+## Backend 
+Ubicado en la carpeta server, encargado de la seguridad y persistencia:
+* 	Node.js & Express: Servidor de API REST.
+* 	Autenticación: Uso de Cookies y JWT para mantener sesiones seguras.
+* 	Seguridad de Datos: Encriptación de contraseñas con Bcrypt.
+## Base de Datos (MySQL)
+El esquema `hirata_db` incluye:
+* `drivers`: Registro de conductores.
+* `trucks`: Datos técnicos y odómetro de los camiones.
+* `mileage_logs`: Historial de kilómetros ingresados.
+* `maintenance_history`: Registro de servicios realizados.
 
-## 🔍 Problema que resuelve
-La ausencia de un sistema automatizado en Transportes Hirata desencadenaba el siguiente ciclo destructivo:
+# Instalación y Despliegue
 
-|        Etapa            |                     Descripción                           |
-|-------------------------|-----------------------------------------------------------|
-| 🔵 Punto Ciego          | Sin monitoreo de kilometraje en tiempo real              |
-| 🟡 Falla Oculta         | Mantenimientos preventivos sistemáticamente omitidos     |
-| 🔴 Quiebre Operativo    | Vehículos inmovilizados por fallas mecánicas inesperadas |
-| ⚫ Impacto Comercial    | Retrasos en entregas y escalada de costos de reparación  |
-
-
-
-## ✨ Funcionalidades principales
-- **RF-01 · Captura de Kilometraje** — Los conductores registran el kilometraje al finalizar cada recorrido mediante una interfaz de escritorio intuitiva.
-- **RF-02 · Gestión de Flota** — El administrador registra y gestiona perfiles de vehículos y conductores asignados (CRUD completo).
-- **RF-03 · Motor de Alertas Automáticas** — El sistema evalúa umbrales y dispara alertas preventivas al acumularse **5,000 km** desde el último mantenimiento.
-- **RF-04 · Historial de Mantenimiento** — Control total de intervenciones mecánicas con protección contra registros duplicados y trazabilidad garantizada.
-- **RF-05 · Aseguramiento de Calidad** — Validaciones modulares con pruebas unitarias y manejo descriptivo de errores.
-
-## 🏗️ Arquitectura del sistema
-
-El sistema opera en dos frentes simultáneos:
-
-│    OFICINAS CENTRALES           │     OPERACIÓN DE FLOTA       │
-│    (Infraestructura)            │     (Software)               │
-│   ----------------------------- │ -----------------------------│
-│  • Mantenimiento físico         │  • App de escritorio Java    │
-│    y lógico de terminales       │  • Base de datos MySQL       │
-│  • Actualización de SO          │  • Motor de reglas (5000 km) │
-│  • Checklist de control         │  • Alertas predictivas       │
-    
-
-## 🛠️ Stack tecnológico
-
-|           Capa           |     Tecnología     |
-|--------------------------|--------------------|
-| Aplicación de escritorio | Java (Swing / AWT) |
-|      Base de datos       |        MySQL       |
-| Control de versiones     |    Git / GitHub    |
-
-## 📦 Requisitos previos
-
-Antes de instalar el proyecto, asegúrate de tener lo siguiente instalado en el pc:
-
-- [Java JDK 11+](https://www.oracle.com/java/technologies/downloads/)
-- [MySQL 8.0+](https://dev.mysql.com/downloads/)
-- [Node.js](https://nodejs.org/) *(si el proyecto incluye servidor auxiliar)*
-
-
-
-
-
+## Requisitos Previos
+* Node.js v16 o superior.
+* MySQL Server v8.0.
+* Navegador web moderno (Chrome, Edge o Safari).
+## Configuración del Servidor
+* 	1	Navega a la carpeta server.
+* 	2	Instala las dependencias:
+        `npm install`.
+* 	3	Configura el archivo `.env` con tus credenciales de base de datos.
+* 	4	Ejecuta el script SQL dbSchema.sql en tu instancia de MySQL.
+* 	5	Inicia el servidor: 
+       ```bash
+       npm run dev	
+## Acceso al Cliente
+*	1	Abre el archivo `login.html` en tu navegador.
+*	2	El sistema se conectará automáticamente a http://localhost
 
