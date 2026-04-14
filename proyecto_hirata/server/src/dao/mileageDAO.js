@@ -20,7 +20,7 @@ export default class Mileage {
 
       // Se obtienen los datos del camión y su asignación activa
       const [assignmentRows] = await connection.query(
-        `SELECT td.id, td.truck_id, t.plate_number, t.total_mileage, t.last_maintenance_mileage, t.maintenance_threshold
+        `SELECT td.id, td.truck_id, t.plate_number, t.total_mileage, t.last_maintenance_mileage, t.maintenance_threshold, t.status
         FROM truck_driver td
         JOIN trucks t ON td.truck_id = t.id
         WHERE td.driver_id = ? AND td.active = true
@@ -32,6 +32,11 @@ export default class Mileage {
         throw new Error('El conductor no tiene un camion asignado')
       }
       const truck = assignmentRows[0]
+
+      // Evitar que el chofer introduzca kilometrajes si el camión está en mantenimiento
+      if (truck.status === 'en mantenimiento') {
+        throw new Error(`Operación denegada: El vehículo [${truck.plate_number}] se encuentra en mantenimiento y no debe ser operado.`)
+      }
 
       // Validación de kilometraje correcto
       if(mileage_value <= truck.total_mileage) {
@@ -62,19 +67,9 @@ export default class Mileage {
         ]
       )
 
-      // Cerrar asginación actual para disponibilizar el camión
-      await connection.query(
-        `UPDATE truck_driver
-        SET 
-          active = false,
-          ended_at = ?
-        WHERE id = ?`,
-        [
-          registration_date || new Date(),
-          truck.id
-        ]
-      )
-
+      // Nota: Eliminamos el cierre de asignación (active = false) al registrar kilometraje
+      // para permitir que el conductor pueda seguir viendo y usar el camión asignado (recarga en UI).
+      
       // Generar notificaciones si requiere mantenimiento
       if(needsMaintenance) {
 

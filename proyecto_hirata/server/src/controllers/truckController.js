@@ -50,7 +50,8 @@ const getMyTruck = async (req, res) => {
         plate_number: truck.plate_number,
         brand: truck.brand,
         model: truck.model,
-        total_mileage: truck.total_mileage
+        total_mileage: truck.total_mileage,
+        status: truck.status
       }
     })
 
