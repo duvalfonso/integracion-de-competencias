@@ -11,7 +11,7 @@ const getRedirectByRole = (role) => {
       admin: ADM_FLOTA_VIEW_URL,
       superadmin: ADM_FLOTA_VIEW_URL,
       maintenance: ADM_MANT_VIEW_URL,
-      conductor: DRIVER_VIEW_URL
+      driver: DRIVER_VIEW_URL
     }
     return routes[role] || DRIVER_VIEW_URL
 };
@@ -70,15 +70,16 @@ document.getElementById("loginForm").addEventListener("submit", async function (
 
         // Valida contrato de respuesta esperado.
         if (data.status !== "success" || !data.payload) {
-            setAlert(alerta, "Credenciales incorrectas");
+            setAlert(alerta, "Credenciales incorrectas", "danger");
             return;
         }
+        
         const perfil = data.payload;
-        localStorage.setItem("usuarioHirata", JSON.stringify(perfil));
         // Persiste perfil para control de sesión y redirige según rol.
         window.location.href = getRedirectByRole(perfil.role);
     } catch (error) {
-        setAlert(alerta, error.message || "No se pudo conectar al servidor.");
+        // Muestra en pantalla si la "contraseña es incorrecta"
+        setAlert(alerta, error.message || "No se pudo conectar al servidor.", "danger");
     } finally {
         // Siempre restaura UI al terminar el proceso.
         setLoading(false);

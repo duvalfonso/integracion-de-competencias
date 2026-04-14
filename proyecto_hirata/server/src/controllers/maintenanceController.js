@@ -40,9 +40,41 @@ const completeMaintenance = async (req, res) => {
   }
 }
 
+const getAll = async (req, res) => {
+  try {
+    const result = await maintenanceService.getAllMaintenances()
+    res.send({ status: "success", payload: result })
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message })
+  }
+}
+
+const updateMaintenance = async (req, res) => {
+  try {
+    const { maintenance_id } = req.params;
+    await maintenanceService.updateMaintenance(maintenance_id, req.body);
+    res.send({ status: "success", message: "Mantenimiento actualizado exitosamente" });
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message })
+  }
+}
+
+const deleteMaintenance = async (req, res) => {
+  try {
+    const { maintenance_id } = req.params;
+    await maintenanceService.deleteMaintenance(maintenance_id);
+    res.send({ status: "success", message: "Mantenimiento eliminado exitosamente" });
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message })
+  }
+}
+
 export default {
   createMaintenance,
   startMaintenance,
   getByTruck,
-  completeMaintenance
+  completeMaintenance,
+  getAll,
+  updateMaintenance,
+  deleteMaintenance
 }

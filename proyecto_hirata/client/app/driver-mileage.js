@@ -2,10 +2,6 @@ import { requestJson, setAlert, toDateTimeLocal } from "./shared.js"
 
 const API_BASE = "http://localhost:8000/api";
 
-const MILEAGE_BLOCK_SIZE = 5000;
-
-const getMileageBlock = (value) => Math.floor(Number(value) / MILEAGE_BLOCK_SIZE);
-
 const validateMileageForm = (mileage, date) => {
     const mileageNum = parseInt(mileage, 10);
     if (isNaN(mileageNum) || mileageNum <= 0) {
@@ -33,6 +29,16 @@ const loadAssignedTruck = async (container, alert) => {
             container.dataset.initialMileage = String(Number(truck.total_mileage || 0));
             container.value = `${truck.plate_number} (${truck.total_mileage} km)`;
         }
+
+        // Validación visual en caso de que esté en mantenimiento
+        if (truck.status === 'en mantenimiento') {
+            if(alert) setAlert(alert, "⚠️ Tu vehículo se encuentra actualmente 'en mantenimiento'. No puedes registrar kilometraje hasta que sea liberado.", "warning");
+            const submitBtn = document.getElementById("saveMileageBtn");
+            if(submitBtn) submitBtn.disabled = true;
+        } else {
+            const submitBtn = document.getElementById("saveMileageBtn");
+            if(submitBtn) submitBtn.disabled = false;
+        }
     } catch (error) {
         if (container) {
             container.dataset.initialMileage = "";
@@ -51,16 +57,17 @@ const submitMileage = async (mileage, date) => {
     };
 
     try {
-        await requestJson(`${API_BASE}/mileageLogs/save`, {
+        const responseData = await requestJson(`${API_BASE}/mileageLogs/save`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         }, "No se pudo guardar el kilometraje")
 
-        return { success: true, message: "Kilometraje registrado exitosamente" };
+        return { success: true, message: responseData.message || "Kilometraje registrado exitosamente" };
     } catch (error) {
-        return { success: false, message: "Sin conexión al servidor. Intenta de nuevo." };
+        // [RF-01] Captura explícita del error validado desde el backend (ej: kilometraje menor al actual).
+        return { success: false, message: error.message };
     }
 };
 
@@ -92,61 +99,46 @@ export function initMileageForm() {
             return;
         }
 
-        const previousMileage = Number(assignedTruckContainer?.dataset?.initialMileage || 0);
-        const nextMileage = Number(mileageInput.value);
-
-        if (nextMileage <= previousMileage) {
-            if (alert) {
-                setAlert(alert, `El kilometraje debe ser mayor a ${previousMileage}`, "warning");
-            }
-            return;
-        }
-        const crossedMaintenanceBlock = getMileageBlock(nextMileage) > getMileageBlock(previousMileage);
-
-        if (crossedMaintenanceBlock && alert) {
-            setAlert(
-                alert,
-                `Alerta: se superó el límite de ${MILEAGE_BLOCK_SIZE} km. El vehículo requiere mantenimiento preventivo.`,
-                "warning"
-            );
-        }
-
         submitBtn.disabled = true;
-        if (alert && !crossedMaintenanceBlock) {
+        if (alert) {
             setAlert(alert, "Guardando...", "info");
         }
 
         const result = await submitMileage(mileageInput.value, dateInput.value);
 
         if (alert) {
-            if (crossedMaintenanceBlock) {
-                alert.textContent = `${alert.textContent}\n${result.message}`;
-                alert.className = `mt-3 ${result.success ? "text-success" : "text-danger"}`;
-            } else {
-                setAlert(alert, result.message, result.success ? "success" : "danger");
-            }
+            setAlert(alert, result.message, result.success ? "success" : "danger");
         }
 
+        // Se asegura que tras un éxito, re-renderiza el camión con el kilometraje ya impactado en la Base de Datos.
         if (result.success) {
             mileageInput.value = "";
             if (dateInput) dateInput.value = toDateTimeLocal();
             
-            await loadAssignedTruck(assignedTruckContainer, null);
+            await loadAssignedTruck(assignedTruckContainer, alert);
         }
 
         submitBtn.disabled = false;
     });
 
-    // Restablece entradas locales del formulario sin alterar asignación de vehículo.
+    // Restablece entradas locales del formulario y vuelve a consultar la información actualizada del camión al back (sincronizando kilometraje).
     if (clearBtn) {
-        clearBtn.addEventListener("click", (e) => {
+        clearBtn.addEventListener("click", async (e) => {
             e.preventDefault();
+            
             mileageInput.value = "";
             if (dateInput) dateInput.value = toDateTimeLocal();
+            
             if (alert) {
-                setAlert(alert, "", "secondary");
+                setAlert(alert, "Recargando datos actualizados del vehículo...", "info");
             }
-            loadAssignedTruck(assignedTruckContainer, null);
+            
+            await loadAssignedTruck(assignedTruckContainer, alert);
+            
+            if (alert) {
+                setAlert(alert, "Formulario limpio y datos actualizados correctamente", "success");
+                setTimeout(() => { alert.textContent = ""; alert.className = "mt-3 text-secondary"; }, 3000);
+            }
         });
     }
 }

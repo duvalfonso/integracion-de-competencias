@@ -6,6 +6,10 @@ export default class MaintenanceRepository extends GenericRepository {
   }
 
   createMaintenance = async (data) => await this.dao.create(data)
+
+  getAllMaintenances = async () => await this.dao.getAll()
+  updateMaintenance = async (id, data) => await this.dao.update(id, data)
+  deleteMaintenance = async (id) => await this.dao.delete(id)
   
   startMaintenance = async (id) => await this.dao.startMaintenance(id)
 

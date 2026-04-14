@@ -36,7 +36,7 @@ export default class Assignment {
       const truck = truckData[0]
 
       if(truck.status === 'en mantenimiento') {
-        throw new Error(`Operación denegada: El vehículo [${truck.plate_number}] se encuentra en mantenimiento y no puede ser operado.`)
+        throw new Error(`Operación denegada: El vehículo [${truck.plate_number}] se encuentra registrado 'en mantenimiento'. Por favor, finalice el mantenimiento antes de asignarlo.`)
       }
 
       if(truck.status === 'en uso') {
@@ -98,6 +98,18 @@ export default class Assignment {
 
     try {
       await connection.beginTransaction()
+
+      const [truckData] = await connection.query(
+        `SELECT status, plate_number FROM trucks WHERE id = ? FOR UPDATE`,
+        [truck_id]
+      )
+
+      if(truckData.length === 0) throw new Error('El vehículo no existe')
+      const truck = truckData[0]
+
+      if(truck.status === 'en mantenimiento') {
+        throw new Error(`Operación denegada: El vehículo [${truck.plate_number}] se encuentra registrado 'en mantenimiento'. Por favor, finalice el mantenimiento antes de reasignarlo.`)
+      }
 
       const [driverCheck] = await connection.query(
         `SELECT id FROM truck_driver WHERE driver_id = ? AND active = true FOR UPDATE`, [driver_id]
