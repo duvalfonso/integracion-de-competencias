@@ -63,6 +63,4 @@ app.use('/api/trucks', truckRouter)
 app.use('/api/notifications', notificationRouter)
 app.use('/api/maintenances', maintenanceRouter)
 
-app.listen(PORT, ()=> {
-  console.log(`Servidor escuchando en el puerto ${PORT}` )
-})
+export default app
