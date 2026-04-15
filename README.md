@@ -33,13 +33,17 @@ El esquema `hirata_db` incluye:
 * 	2	Instala las dependencias:
         `npm install`.
 * 	3	Configura el archivo `.env` con tus credenciales de base de datos.
-* 	MYSQL_HOST=127.0.0.1
-        MYSQL_USER=root
-        MYSQL_PASSWORD=tu_password_aqui
-        MYSQL_DATABASE=hirata_db
+* 3 Configura el archivo `.env` con tus credenciales de base de datos:
+
+```env
+MYSQL_HOST=127.0.0.1
+MYSQL_USER=root
+MYSQL_PASSWORD=tu_password_aqui
+MYSQL_DATABASE=hirata_db
 
 PORT=8000
 JWT_SECRET=firma
+```
 * 	4	Ejecuta el script SQL dbSchema.sql en tu instancia de MySQL.
 * 	5	Inicia el servidor: 
        ```bash
