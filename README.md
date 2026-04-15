@@ -33,7 +33,6 @@ El esquema `hirata_db` incluye:
 * 	2	Instala las dependencias:
         `npm install`.
 * 	3	Configura el archivo `.env` con tus credenciales de base de datos.
-* 3 Configura el archivo `.env` con tus credenciales de base de datos:
 
 ```env
 MYSQL_HOST=127.0.0.1
