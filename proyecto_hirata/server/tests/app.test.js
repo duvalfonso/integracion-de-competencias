@@ -7,6 +7,6 @@ describe('Base API', () => {
 
     expect(res.statusCode).toBe(200)
     expect(res.body).toHaveProperty('msg')
-    expect(res.body.msg).toBe("API funcionando")
+    expect(res.body.msg).toBe("API de kilometraje funcionando")
   })
 })
