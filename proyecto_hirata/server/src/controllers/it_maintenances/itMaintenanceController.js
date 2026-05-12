@@ -12,9 +12,9 @@ const getAllItMaintenances = async (req, res) => {
 const getById = async (req, res) => {
   try {
     const { id } = req.params
-    const itMaintenance = await itMaintenanceService.getById(id)
+    const [itMaintenance] = await itMaintenanceService.getById(id)
     if (!itMaintenance) {
-      res.status(404).send({ status: 'error', error: 'Mantenimiento no encontrado según el id especificado.' })
+      return res.status(404).send({ status: 'error', error: 'Mantenimiento no encontrado según el id especificado.' })
     }
     res.send({ status: 'success', payload: itMaintenance })
   } catch (error) {
@@ -24,11 +24,11 @@ const getById = async (req, res) => {
 
 const registerMaintenance = async (req, res) => {
   try {
-    const { equipment_id, technician_id, type, description, cost, final_status } = req.body
+    const { equipment_id, technician_id, type, description, cost, final_status, parts } = req.body
     const userId = req.session.user.id
 
     if (!equipment_id || !type || !description) {
-      res.status(400).send({ status: 'error', error: 'Campos incompletos' })
+      return res.status(400).send({ status: 'error', error: 'Campos incompletos' })
     }
 
     const maintenanceData = {
@@ -40,12 +40,23 @@ const registerMaintenance = async (req, res) => {
       final_status: final_status || 'operativo'
     }
 
-    // se deben traer de la base de datos las partes usadas para llevar el control de inventario. De momento solo se habilita el registro sin uso de partes desde el inventario.
-    const partsUsed = []
+    // la función espera las partes desde el req.body como un array
+    // el request body completo debe ser:
+    // {
+    //   "equipment_id": 1,
+    //   "type": "correctivo",
+    //   "description": "Reemplazo de disco duro y ram",
+    //   "parts": [
+    //     { "part_id": 1, "quantity_used": 1 },
+    //     { "part_id": 2, "quantity_used": 2 }
+    //   ]
+    // }
 
-    const resultId = await itMaintenanceService.registerMaintenance(maintenanceData, partsUsed)
+    const partsUsed = Array.isArray(parts) ? parts : []
+
+    const result = await itMaintenanceService.registerMaintenance(maintenanceData, partsUsed)
   
-    res.send({ status: 'success', message: 'Mantenimiento registrado.', resultId: resultId })
+    res.send({ status: 'success', message: 'Mantenimiento registrado.', resultId: result.maintenanceId })
   } catch (error) {
     res.status(500).send({ status: 'error', error: error.message })
   }

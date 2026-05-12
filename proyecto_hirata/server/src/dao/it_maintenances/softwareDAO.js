@@ -11,6 +11,14 @@ export default class Software {
     return result
   }
 
+  getBy = async (params) => {
+    const key = Object.keys(params)[0]
+    const value = params[key]
+    const query = `SELECT * FROM ${this.table} WHERE ${key} = ?`
+    const [result] = await pool.execute(query, [value])
+    return result[0]
+  }
+
   getById = async (id) => {
     const query = `SELECT * FROM ${this.table} WHERE id = ?`
     const [result] = await pool.execute(query, [id])

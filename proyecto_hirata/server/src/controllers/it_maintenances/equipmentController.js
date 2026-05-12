@@ -25,7 +25,7 @@ const createEquipment = async (req, res) => {
   try {
     const { inventory_code, type, brand, model, serial_number, status, location } = req.body
     if (!inventory_code || !type || !brand || !model || !serial_number) {
-      res.status(400).send({ status: 'error', error: 'Campos incompletos' })
+      return res.status(400).send({ status: 'error', error: 'Campos incompletos' })
     }
 
     const equipment = {

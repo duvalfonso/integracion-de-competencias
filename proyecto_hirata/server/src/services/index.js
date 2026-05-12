@@ -9,6 +9,7 @@ import Equipment from "../dao/it_maintenances/itEquipmentDAO.js";
 import ItMaintenance from "../dao/it_maintenances/itMaintenanceDAO.js";
 import Software from "../dao/it_maintenances/softwareDAO.js";
 import EquipmentSoftware from "../dao/it_maintenances/equipmentSoftwareDAO.js";
+import PartsInventory from "../dao/it_maintenances/partsInventoryDAO.js";
 
 import UserRepository from "../repository/UserRepository.js";
 import MileageRepository from "../repository/MileageRepository.js";
@@ -21,6 +22,7 @@ import EquipmentRepository from "../repository/it_maintenances/EquipmentReposito
 import ItMaintenanceRepository from "../repository/it_maintenances/ItMaintenanceRepository.js";
 import SoftwareRepository from "../repository/it_maintenances/SoftwareRepository.js";
 import EquipmentSoftwareRepository from "../repository/it_maintenances/EquipmentSoftwareRepository.js";
+import PartsInventoryRepository from "../repository/it_maintenances/PartsInventoryRepository.js";
 
 export const usersService = new UserRepository(new Users())
 export const mileageService = new MileageRepository(new Mileage())
@@ -33,3 +35,4 @@ export const equipmentService = new EquipmentRepository(new Equipment())
 export const itMaintenanceService = new ItMaintenanceRepository(new ItMaintenance())
 export const softwareService = new SoftwareRepository(new Software())
 export const equipmentSoftwareService = new EquipmentSoftwareRepository(new EquipmentSoftware())
+export const partsInventoryService = new PartsInventoryRepository(new PartsInventory())

@@ -1,11 +1,11 @@
 import GenericRepository from "../GenericRepository.js";
 
-export default class SoftwareRepository extends GenericRepository {
+export default class PartsInventoryRepository extends GenericRepository {
   constructor(dao) {
     super(dao)
   }
 
   getById = async (id) => {
-    return this.dao.getById(id)
+    return await this.getBy({ id })
   }
 }
