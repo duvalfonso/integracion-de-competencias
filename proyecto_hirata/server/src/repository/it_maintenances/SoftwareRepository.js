@@ -6,6 +6,6 @@ export default class SoftwareRepository extends GenericRepository {
   }
 
   getById = async (id) => {
-    return this.getBy({ id })
+    return this.dao.getById(id)
   }
 }

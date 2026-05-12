@@ -14,6 +14,8 @@ import maintenanceRouter from './routes/maintenance.router.js'
 
 import equipmentRouter from './routes/it_maintenances/equipment.router.js'
 import itMaintenanceRouter from './routes/it_maintenances/itMaintenance.router.js'
+import equipmentSoftwareRouter from './routes/it_maintenances/equipmentSoftware.router.js'
+import softwareRouter from './routes/it_maintenances/software.router.js'
 
 const app = express()
 
@@ -68,5 +70,7 @@ app.use('/api/maintenances', maintenanceRouter)
 
 app.use('/api/ti/equipments', equipmentRouter)
 app.use('/api/ti/maintenances', itMaintenanceRouter)
+app.use('/api/ti/equipment-software', equipmentSoftwareRouter)
+app.use('/api/ti/software', softwareRouter)
 
 export default app

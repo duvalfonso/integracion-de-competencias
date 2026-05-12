@@ -22,11 +22,15 @@ export default class Software {
     const query = `
     INSERT INTO ${this.table} (name, version, license_type)
     VALUES (?, ?, ?)`
-    const [result] = await pool.execute(query,[name, version, license_type])
+    const [result] = await pool.execute(query,[name, version, license_type || null])
     return result
   }
 
-  update = async () => {
-    // TODO: Implementar un metodo de actualización de versión del software en la DB
+  update = async (id, doc) => {
+    const fields = Object.keys(doc).map(key => `${key} = ?`).join(', ')
+    const values = Object.values(doc)
+    const query = `UPDATE ${this.table} SET ${fields} WHERE id = ?`
+    const [result] = await pool.execute(query, [...values, id])
+    return result
   }
 }
