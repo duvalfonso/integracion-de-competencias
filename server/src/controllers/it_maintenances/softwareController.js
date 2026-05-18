@@ -46,12 +46,18 @@ const installSoftware = async (req, res) => {
     }
 
     const result = await softareService.install(installData)
-    res.send({ status: 'success', message: 'Software asociado al equipo.', result_id: result.insertId })
+    res.send({ status: 'success', message: 'Software instalado/actualizado correctamente. El registro ha sido guardado en el sistema.', result_id: result.insertId })
   } catch (error) {
+    // Mensajes específicos según el error
+    if (error.message.includes('equipo_no_existe')) {
+      return res.status(400).send({ status: 'error', error: 'El equipo no está registrado. Debe registrarse primero.' })
+    }
+    if (error.message.includes('software_no_existe')) {
+      return res.status(400).send({ status: 'error', error: 'El software no está en la lista. Debe ser registrado en el catálogo primero.' })
+    }
     res.status(500).send({ status: 'error', error: error.message })
   }
 }
-
 const getInstallations = async (req, res) => {
   try {
     const installations = await softareService.getInstallations()
