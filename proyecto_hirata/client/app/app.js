@@ -428,6 +428,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "../../module/admmantenimiento/admmant.view.html";
         return;
     }
+
+    if (usuario.role === 'it_tech' && !currentPath.includes('it-maintenance.view.html')) {
+        window.location.href = "../../module/itmaintenance/it-maintenance.view.html";
+        return;
+    }
+
     // Completa datos de usuario en la barra superior de las vistas activas.
     initNavbarUser(usuario);
     initAdminNotifications(usuario);

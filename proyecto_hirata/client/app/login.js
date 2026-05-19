@@ -5,12 +5,15 @@ const API_LOGIN_URL = "http://localhost:8000/api/sessions/login";
 const DRIVER_VIEW_URL = "module/driver/driver.view.html";
 const ADM_FLOTA_VIEW_URL = "module/admflota/admflota.view.html";
 const ADM_MANT_VIEW_URL = "module/admmantenimiento/admmant.view.html";
+const IT_MAINT_VIEW_URL = "module/itmaintenance/it-maintenance.view.html";
+const ADM_IT_VIEW_URL = "module/admin-it/adm-it.view.html";
 // Resuelve la ruta de inicio de acuerdo al rol autenticado.
 const getRedirectByRole = (role) => {
     const routes = {
-      admin: ADM_FLOTA_VIEW_URL,
+      admin: ADM_IT_VIEW_URL,
       superadmin: ADM_FLOTA_VIEW_URL,
       maintenance: ADM_MANT_VIEW_URL,
+      it_tech: IT_MAINT_VIEW_URL,
       driver: DRIVER_VIEW_URL
     }
     return routes[role] || DRIVER_VIEW_URL

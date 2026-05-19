@@ -36,16 +36,32 @@ export default class Users {
     return result[0]
   }
 
+  getAvailableDrivers = async () => {
+    const query = `
+      SELECT u.id, u.full_name, u.email
+      FROM users u
+      INNER JOIN roles r ON r.id = u.role_id
+      WHERE r.name = 'driver'
+      AND u.active = true
+      AND NOT EXISTS (
+        SELECT 1 FROM truck_driver td
+        WHERE td.driver_id = u.id AND td.active = true
+      )
+      ORDER BY u.full_name ASC`
+    const [result] = await pool.execute(query)
+    return result
+  }
+
   save = async (doc) => {
-    const { full_name, email, password } = doc
+    const { full_name, email, password, role_id } = doc
     if(email === 'super.admin@test.test') {
-      const role_id = 2
+      const superadmin_role_id = 2
       const query = `INSERT INTO ${this.table} (full_name, email, password, role_id) VALUES (?, ?, ?, ?)`
-    const [result] = await pool.execute(query, [full_name, email, password, role_id])
+    const [result] = await pool.execute(query, [full_name, email, password, superadmin_role_id])
     return result
     }
-    const query = `INSERT INTO ${this.table} (full_name, email, password) VALUES (?, ?, ?)`
-    const [result] = await pool.execute(query, [full_name, email, password])
+    const query = `INSERT INTO ${this.table} (full_name, email, password, role_id) VALUES (?, ?, ?, ?)`
+    const [result] = await pool.execute(query, [full_name, email, password, role_id || 3])
     return result
   }
 

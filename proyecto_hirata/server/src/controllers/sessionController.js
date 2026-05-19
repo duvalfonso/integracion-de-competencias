@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 
 const register = async(req, res) => {
   try {
-    const { full_name, email, password } = req.body // se toman los datos desde el formulario
+    const { full_name, email, password, role_id } = req.body // se toman los datos desde el formulario
     if(!full_name || !email || !password) return res.status(400).send({ status: "error", error: "Campos incompletos" })
     const exists = await usersService.getUserByEmail(email) // se rectifica si existe el correo descrito
     if(exists) return res.status(400).send({ status: "error", error: "El email indicado ya se encuentra registrado" })
@@ -14,7 +14,8 @@ const register = async(req, res) => {
     const user = {
       full_name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role_id: role_id || 3 // rol conductor por defecto
     }
     let result = await usersService.create(user)
     res.send({ status: "success", payload: { createdId: result.insertId } })

@@ -58,11 +58,10 @@ export default class Mileage {
       // Actualizar camion
       await connection.query(
         `UPDATE trucks
-        SET total_mileage = ?, status = ?
+        SET total_mileage = ?
         WHERE id = ?`,
         [
           mileage_value, 
-          needsMaintenance ? 'en mantenimiento' : 'disponible',
           truck.truck_id
         ]
       )

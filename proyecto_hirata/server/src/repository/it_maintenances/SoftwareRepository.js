@@ -8,4 +8,16 @@ export default class SoftwareRepository extends GenericRepository {
   getById = async (id) => {
     return this.getBy({ id })
   }
+
+  install = async (data) => {
+    return await this.dao.install(data)
+  }
+
+  getInstallations = async () => {
+    return await this.dao.getInstallations()
+  }
+
+  getInstallationById = async (id) => {
+    return await this.dao.getInstallationById(id)
+  }
 }

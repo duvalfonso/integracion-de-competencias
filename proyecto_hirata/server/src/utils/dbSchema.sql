@@ -106,7 +106,7 @@ CREATE TABLE maintenance_logs (
 CREATE TABLE it_equipment (
   id INT AUTO_INCREMENT PRIMARY KEY,
   inventory_code VARCHAR(50) NOT NULL UNIQUE, -- Código interno de la empresa
-  type ENUM('PC', 'Laptop', 'Impresora', 'Servidor', 'Switch', 'Otro') NOT NULL,
+  type ENUM('PC', 'Laptop', 'Impresora', 'Servidor', 'Switch', 'Access Point', 'Router', 'Otro') NOT NULL,
   brand VARCHAR(50),
   model VARCHAR(50),
   serial_number VARCHAR(100) UNIQUE,
