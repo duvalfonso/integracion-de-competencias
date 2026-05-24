@@ -128,10 +128,12 @@ CREATE TABLE it_equipment_software (
   id INT AUTO_INCREMENT PRIMARY KEY,
   equipment_id INT NOT NULL,
   software_id INT NOT NULL,
-  install_date DATE NOT NULL,
+  registered_by INT NOT NULL,
+  install_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   notes TEXT,
   FOREIGN KEY (equipment_id) REFERENCES it_equipment(id) ON DELETE CASCADE,
-  FOREIGN KEY (software_id) REFERENCES software(id) ON DELETE CASCADE
+  FOREIGN KEY (software_id) REFERENCES software(id) ON DELETE CASCADE,
+  FOREIGN KEY (registered_by) REFERENCES users(id)
 );
 
 -- RF-09: Inventario de Piezas (Repuestos)

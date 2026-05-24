@@ -1,8 +1,8 @@
-import pool from "../../utils/dbConnection.js";
+import pool from '../../utils/dbConnection.js'
 
-export default class Software {
+export default class EquipmentSoftware {
   constructor() {
-    this.table = 'software'
+    this.table = 'it_equipment_software'
   }
 
   get = async () => {
@@ -19,21 +19,29 @@ export default class Software {
     return result[0]
   }
 
-  getById = async (id) => {
-    const query = `SELECT * FROM ${this.table} WHERE id = ?`
-    const [result] = await pool.execute(query, [id])
+  getByEquipment = async (equipmentId) => {
+    const query = `SELECT * FROM ${this.table} WHERE equipment_id = ?`
+    const [result] = await pool.execute(query, [equipmentId])
     return result
   }
 
-  save = async (data) => {
-    const { name, version, license_type } = data
+  save = async (doc) => {
+    const {
+      equipment_id,
+      software_id,
+      registered_by,
+      install_date,
+      notes
+    } = doc
+
     const query = `
-    INSERT INTO ${this.table} (name, version, license_type)
-    VALUES (?, ?, ?)`
-    const [result] = await pool.execute(query,[name, version, license_type || null])
+    INSERT INTO ${this.table} (equipment_id, software_id, registered_by, install_date, notes)
+    VALUES (?, ?, ?, ?, ?)`
+
+    const [result] = await pool.execute(query, [equipment_id, software_id, registered_by, install_date, notes || null])
     return result
   }
-
+  
   update = async (id, doc) => {
     const fields = Object.keys(doc).map(key => `${key} = ?`).join(', ')
     const values = Object.values(doc)

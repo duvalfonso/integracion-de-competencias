@@ -33,7 +33,7 @@ export default class ItMaintenance {
       await connection.beginTransaction()
       // Se identifica el equipo existente y se bloquea la fila durante su actualización
       const query = `SELECT id, inventory_code FROM it_equipment WHERE id = ? FOR UPDATE`
-      const [equipment] = await pool.query(query, [equipment_id])
+      const [equipment] = await connection.query(query, [equipment_id])
 
       if(!equipment) throw new Error('El equipo no existe en la base de datos.')
 
@@ -53,7 +53,7 @@ export default class ItMaintenance {
             [part.part_id]
           )
 
-          if(partStock === 0) {
+          if(!partStock.length) {
             throw new Error(`La pieza con id ${part.part_id} no existe.`)
           }
 
@@ -72,7 +72,7 @@ export default class ItMaintenance {
             `INSERT INTO it_maintenance_parts_used
             (maintenance_id, part_id, quantity_used)
             VALUES (?, ?, ?)`,
-            maintenanceId, part.part_id, part.quantity_used
+            [maintenanceId, part.part_id, part.quantity_used]
           )
         }
       }
