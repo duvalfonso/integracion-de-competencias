@@ -1,20 +1,26 @@
 import { requestJson, setAlert } from "./shared.js"
+
 // Endpoint backend de autenticación.
 const API_LOGIN_URL = "http://localhost:8000/api/sessions/login";
+
 // Rutas de entrada según rol.
 const DRIVER_VIEW_URL = "module/driver/driver.view.html";
 const ADM_FLOTA_VIEW_URL = "module/admflota/admflota.view.html";
 const ADM_MANT_VIEW_URL = "module/admmantenimiento/admmant.view.html";
 const IT_MAINT_VIEW_URL = "module/itmaintenance/it-maintenance.view.html";
 const ADM_IT_VIEW_URL = "module/admin-it/adm-it.view.html";
+
 // Resuelve la ruta de inicio de acuerdo al rol autenticado.
 const getRedirectByRole = (role) => {
+    // Los roles coinciden con la base de datos ('driver', 'maintenance')
     const routes = {
       admin: ADM_IT_VIEW_URL,
-      superadmin: ADM_FLOTA_VIEW_URL,
-      maintenance: ADM_MANT_VIEW_URL,
+      superadmin: ADM_FLOTA_VIEW_URL, 
+      maintenance: ADM_MANT_VIEW_URL, 
       it_tech: IT_MAINT_VIEW_URL,
-      driver: DRIVER_VIEW_URL
+      driver: DRIVER_VIEW_URL,
+      mantenimiento: ADM_MANT_VIEW_URL, // por compatibilidad con código antiguo
+      conductor: DRIVER_VIEW_URL        // por compatibilidad con código antiguo
     }
     return routes[role] || DRIVER_VIEW_URL
 };
@@ -56,6 +62,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     const usuario = document.getElementById("usuario").value.trim().toLowerCase();
     const password = document.getElementById("password").value;
     const alerta = document.getElementById("alertaLogin");
+    
     // Estado inicial limpio antes del intento de autenticación.
     setAlert(alerta, "", "secondary");
     setLoading(true);
@@ -78,10 +85,15 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         }
         
         const perfil = data.payload;
-        // Persiste perfil para control de sesión y redirige según rol.
+        
+        // CORRECCIÓN: Persistir el perfil localmente para que el resto de la app sepa quién es
+        localStorage.setItem('hirata_session', JSON.stringify(perfil));
+
+        // Redirige según rol.
         window.location.href = getRedirectByRole(perfil.role);
+        
     } catch (error) {
-        // Muestra en pantalla si la "contraseña es incorrecta"
+        // Muestra en pantalla si la contraseña es incorrecta
         setAlert(alerta, error.message || "No se pudo conectar al servidor.", "danger");
     } finally {
         // Siempre restaura UI al terminar el proceso.

@@ -13,7 +13,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
-    <link rel="stylesheet" href="../../styles/main.css" />
+    <link rel="stylesheet" href="../../assets/css/main.css" />
   </head>
   <body class="d-flex flex-column min-vh-100 bg-light">
     <!-- Barra superior con identidad y sesión -->
@@ -125,7 +125,7 @@
                   <h4 class="h6 mb-3">Camiones registrados</h4>
                   <hr class="my-4" />
                   <div class="table-responsive">
-                    <table class="table table-sm align-middle" id="trucksTable">
+                    <table class="table table-sm align-middle text-nowrap" id="trucksTable">
                       <thead>
                         <tr>
                           <th>Patente</th>
@@ -163,8 +163,8 @@
                     />
                   </div>
                   <div>
-                    <label for="Rol" class="form-label">Rol</label>
-                    <select id="Rol" class="form-select" required>
+                    <label for="rol" class="form-label">Rol</label>
+                    <select id="rol" class="form-select" required>
                       <option value="">Selecciona un rol</option>
                       <option value="admin">Administrador TI</option>
                       <option value="conductor">Conductor</option>
@@ -224,7 +224,7 @@
               <div class="mb-3">
                 <label for="assignDriverSelect" class="form-label">Conductor disponible</label>
                 <select id="assignDriverSelect" class="form-select" required>
-                  <option value="">Selecciona conductor</option>
+                  <option value="" disabled selected>Selecciona conductor</option>
                 </select>
               </div>
               <div id="assignDriverAlert"></div>

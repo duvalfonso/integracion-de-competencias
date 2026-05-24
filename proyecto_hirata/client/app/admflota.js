@@ -170,7 +170,7 @@ const registerDriver = async (event) => {
   event.preventDefault()
 
   const fullName = document.getElementById('driverFullName')?.value?.trim()
-  const roleName = document.getElementById('Rol')?.value
+  const roleName = document.getElementById('rol')?.value
   const email = document.getElementById('driverEmail')?.value?.trim()?.toLowerCase()
   const password = document.getElementById('driverPassword')?.value
 
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const setAssignDriverOptions = (drivers) => {
     if (!assignDriverSelect) return
 
-    assignDriverSelect.innerHTML = '<option value="">Selecciona conductor</option>'
+    assignDriverSelect.innerHTML = '<option value="" disabled selected>Selecciona conductor</option>'
 
     drivers.forEach(({ id, full_name }) => {
       const option = document.createElement('option')

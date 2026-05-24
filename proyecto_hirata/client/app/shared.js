@@ -181,7 +181,7 @@ export function renderSidebar(containerId, items, prefKey) {
 
     // Inicializar lógica después de agregar al DOM
     setTimeout(() => {
-        initSidebarLogic(prefKey);
+    initSidebarLogic(prefKey);
     }, 0);
 }
 
